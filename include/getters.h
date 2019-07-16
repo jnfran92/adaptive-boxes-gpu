@@ -2,7 +2,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-__device__ __host__ void get_right_bottom_rectangle(int idx_i_arg, int idx_j_arg, long m_arg, long n_arg, int *data_matrix_arg){
+// results matrix: [x1 x2 y1 y2]
+__device__ __host__ void get_right_bottom_rectangle(int idx_i_arg, int idx_j_arg, long m_arg, long n_arg, int *data_matrix_arg, int *results){
 
 	int step_j = 0;
 	int first_step_i = 0;
@@ -64,12 +65,17 @@ __device__ __host__ void get_right_bottom_rectangle(int idx_i_arg, int idx_j_arg
 	x2_val = idx_j_arg + step_j - 1;
 	y2_val = idx_i_arg + first_step_i - 1;
 
-	printf("x1 %d   x2 %d    y1 %d    y2 %d\n", x1_val, x2_val, y1_val, y2_val);
+	//printf("x1 %d   x2 %d    y1 %d    y2 %d\n", x1_val, x2_val, y1_val, y2_val);
+
+	results[0] = x1_val;
+	results[1] = x2_val;
+	results[2] = y1_val;
+	results[3] = y2_val;
 
 }
 
 
-__device__ __host__ void get_left_bottom_rectangle(int idx_i_arg, int idx_j_arg, long m_arg, long n_arg, int *data_matrix_arg){
+__device__ __host__ void get_left_bottom_rectangle(int idx_i_arg, int idx_j_arg, long m_arg, long n_arg, int *data_matrix_arg, int *results){
 
 	int step_j = 0;
 	int first_step_i = 0;
@@ -130,12 +136,16 @@ __device__ __host__ void get_left_bottom_rectangle(int idx_i_arg, int idx_j_arg,
 	x2_val = idx_j_arg - step_j + 1;
 	y2_val = idx_i_arg + first_step_i - 1;
 
-	printf("x1 %d   x2 %d    y1 %d    y2 %d\n", x1_val, x2_val, y1_val, y2_val);
-
+	//printf("x1 %d   x2 %d    y1 %d    y2 %d\n", x1_val, x2_val, y1_val, y2_val);
+	
+	results[0] = x1_val;
+	results[1] = x2_val;
+	results[2] = y1_val;
+	results[3] = y2_val;
 }
 
 
-__device__ __host__ void get_left_top_rectangle(int idx_i_arg, int idx_j_arg, long n_arg, int *data_matrix_arg){
+__device__ __host__ void get_left_top_rectangle(int idx_i_arg, int idx_j_arg, long n_arg, int *data_matrix_arg, int *results){
 
 	int step_j = 0;
 	int first_step_i = 0;
@@ -196,12 +206,16 @@ __device__ __host__ void get_left_top_rectangle(int idx_i_arg, int idx_j_arg, lo
 	x2_val = idx_j_arg - step_j + 1;
 	y2_val = idx_i_arg - first_step_i + 1;
 
-	printf("x1 %d   x2 %d    y1 %d    y2 %d\n", x1_val, x2_val, y1_val, y2_val);
+	//printf("x1 %d   x2 %d    y1 %d    y2 %d\n", x1_val, x2_val, y1_val, y2_val);
 
+	results[0] = x1_val;
+	results[1] = x2_val;
+	results[2] = y1_val;
+	results[3] = y2_val;
 }
 
 
-__device__ __host__ void get_right_top_rectangle(int idx_i_arg, int idx_j_arg, long n_arg, int *data_matrix_arg){
+__device__ __host__ void get_right_top_rectangle(int idx_i_arg, int idx_j_arg, long n_arg, int *data_matrix_arg, int *results){
 
 	int step_j = 0;
 	int first_step_i = 0;
@@ -263,7 +277,11 @@ __device__ __host__ void get_right_top_rectangle(int idx_i_arg, int idx_j_arg, l
 	x2_val = idx_j_arg + step_j - 1;
 	y2_val = idx_i_arg - first_step_i + 1;
 
-	printf("x1 %d   x2 %d    y1 %d    y2 %d\n", x1_val, x2_val, y1_val, y2_val);
+	//printf("x1 %d   x2 %d    y1 %d    y2 %d\n", x1_val, x2_val, y1_val, y2_val);
 
+	results[0] = x1_val;
+	results[1] = x2_val;
+	results[2] = y1_val;
+	results[3] = y2_val;
 }
 
