@@ -9,7 +9,7 @@
 #include "./data/squares.h"
 
 // GPU kernel
-__global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int *data_matrix){
+__global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int *data_matrix, int *areas){
 
 	const int coords_m = 5;
 	const int coords_n = 4;
@@ -22,6 +22,10 @@ __global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int
 
 	int g_i = blockDim.y * blockIdx.y + i;
 	int g_j = blockDim.x * blockIdx.x + j;
+
+	int b_i = blockIdx.y;
+	int b_j = blockIdx.x;
+	int b_n = blockDim.y;
 
 
 	/*printf("i %d  j %d   gi %d   gj %d \n",i,j,g_i,g_j);*/
@@ -103,8 +107,14 @@ __global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int
 		int b = abs( coords[coords_n*4 + 2] -  coords[coords_n*4 + 3] );
 		int area = a*b;
 		printf("area %d\n", area);
-	 	coords[coords_n*0 + 0] = area; // Saving area in coords[0][0] 
+	 	coords[coords_n*0 + 0] = area; // Saving area in coords[0][0]
+	       	areas[b_i*b_n + b_j] = area;
+		printf("bi %d    bj %d\n", b_i,b_j);
 	}
+	__syncthreads();
+
+	// get max area all blocks
+
 
 }
 
@@ -143,13 +153,13 @@ int main(){
 	// Copy data to device memory
 	cudaMemcpy(data_d, data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
 
-	dim3 grid(1, 1, 1);
+	dim3 grid(grid_x, grid_y, 1);
 	dim3 block(1, 4, 1); // fixed size
 	
 	int idx_i = 10;
 	int idx_j = 15;	
 
-	find_largest_rectangle<<<grid, block>>>(idx_i, idx_j, m, n, data_d);
+	find_largest_rectangle<<<grid, block>>>(idx_i, idx_j, m, n, data_d, areas);
 	cudaDeviceSynchronize();
 
 
