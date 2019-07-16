@@ -9,17 +9,28 @@
 //data
 #include "./data/complex.h"
 
-//Cooperative groups
-using namespace cooperative_groups;
 
 // GPU kernel
-__global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int *data_matrix, int *areas){
+__global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int *data_matrix, int* areas){
+
+	using namespace cooperative_groups;
 
 	const int coords_m = 5;
 	const int coords_n = 4;
 
 	__shared__ int coords[coords_m * coords_n];
 	__shared__ int total_max;
+
+
+	/*int idx_i = *((int *)args[0]);*/
+	/*int idx_j = *((int *)args[1]);*/
+	/*long m = *((long *)args[2]);*/
+	/*long n = *((long *)args[3]);*/
+	/*int *data_matrix = ((int *)args[4]);*/
+	/*int *areas = ((int *)args[5]);*/
+
+	/*printf("idx_i %d, idx_j %d\n",idx_i,idx_j);*/
+
 
 	int i = threadIdx.y;
 	int j = threadIdx.x;
@@ -104,33 +115,42 @@ __global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int
 
 	__syncthreads();
 
-	/*printf("final x1 %d,    x2 %d,    y1 %d,    y2 %d \n",coords[4*coords_n + 0], coords[4*coords_n + 1],coords[4*coords_n + 2] ,coords[4*coords_n + 3]);*/
+	/*printf("final x1 %d,   x2 %d,    y1 %d,    y2 %d \n",coords[4*coords_n + 0], coords[4*coords_n + 1],coords[4*coords_n + 2] ,coords[4*coords_n + 3]);*/
 
 	// get area
 	if (j==0){
-		int a = abs( coords[coords_n*4 + 0] -  coords[coords_n*4 + 1] );
-		int b = abs( coords[coords_n*4 + 2] -  coords[coords_n*4 + 3] );
+		int a = abs(coords[coords_n*4 + 0] -  coords[coords_n*4 + 1]);
+		int b = abs(coords[coords_n*4 + 2] -  coords[coords_n*4 + 3]);
 		int area = a*b;
-		printf("area %d\n", area);
 	 	coords[coords_n*0 + 0] = area; // Saving area in coords[0][0]
 	       	areas[b_i*b_n + b_j] = area;
 		/*printf("bi %d    bj %d     bn %d\n", b_i,b_j,b_n);*/
+		/*printf("a %d    b %d    area %d, area mat %d\n", a,b,area, areas[b_i*b_n + b_j]);*/
+		/*printf("area %d\n", area);*/
 	}
 	__syncthreads();
 
 	// get max area all blocks
 	if (b_j == 0){
+		/*int temp_area = coords[0];*/
+		/*printf("bj %d     bi %d     j %d\n",b_j,b_i, j);*/
 		int temp_area = areas[b_i*b_n + j];
+		/*printf("temp_area %d    j %d \n", temp_area, j);*/
 		atomicMax(&total_max, temp_area);
 		__syncthreads();
+
 		if(j == 0){
+			printf("total max %d  of block %d\n", total_max, b_i);
 			/*areas[b_i*b_n + 0] = total_max;			*/
-			atomicMax(&areas[0*b_n + 0], total_max);
-			printf("total_max %d -  bi  %d \n", areas[0*b_n + 0], b_i);
+			/*atomicMax(&areas[0*b_n + 0], total_max);*/
+			/*printf("total_max %d -  bi  %d \n", total_max, b_i);*/
 		}
 	}
-
 	__syncthreads();
+
+
+
+	/*__syncthreads();*/
 
 	grid_group grid = this_grid();
 	grid.sync();
@@ -139,16 +159,20 @@ __global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int
 	if (j == 0){
 		int a = coords[coords_n*0 + 0];
 		int b = areas[b_n*0 + 0];
-		/*printf("a %d, b%d\n",a,b);*/
+		printf("a %d, b %d\n",a,b);
 
 		if(a==b){
 			printf("final x1 %d,    x2 %d,    y1 %d,    y2 %d \n",coords[4*coords_n + 0], coords[4*coords_n + 1],coords[4*coords_n + 2] ,coords[4*coords_n + 3]);
 		}
 	}
-	
-
 }
 
+
+__global__ void kernel(int *data, long m){
+	using namespace cooperative_groups;
+	grid_group g = this_grid();
+	printf("it works %ld!!\n",m);
+}
 
 int main(){
 	printf("adaptive-boxes-gpu\n");
@@ -158,15 +182,11 @@ int main(){
 	
 	/*int out[4] = {};	*/
 
-	int a = 1;
-	long b = 2;
-	int c[3] = {1,2,3};
-	void *args[] = {&a, &b, c};
-
-	int *cc;
-	cc = (int *)args[2];
-
-	printf("args [1]%d  [2]%ld [3]%d \n", *(int *)args[0], *(long *)args[1], cc[2]);
+	/*int a = 1;*/
+	/*long b = 2;*/
+	/*int c[3] = {1,2,3};*/
+	/*void *args[] = {&a, &b, c};*/
+	/*print_pointers(args);*/
 	
 	
 
@@ -184,15 +204,19 @@ int main(){
 
 	// CUDA
 	//    number of tests = grid_x*grid_y	
-	int grid_x = 4; // fxed
-	int grid_y = 1; //
+	int grid_x = 4; // fixedint grid_y = 50; //
+	int grid_y = 10; //
 	
 	int *data_d;
-	int *areas;
+	int *areas_d;
 
 	// Get Mem
 	cudaMalloc((void **)&data_d, sizeof(int)*m*n );
-	cudaMalloc((void **)&areas, sizeof(int)*grid_x*grid_y ); 
+	cudaMalloc((void **)&areas_d, sizeof(int)*grid_x*grid_y ); 
+
+	// CPU memKE
+
+	int *areas = new int[grid_x*grid_y];
 
 	// Copy data to device memory
 	cudaMemcpy(data_d, data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
@@ -201,11 +225,20 @@ int main(){
 	dim3 block(4, 1, 1); // fixed size
 	
 	int idx_i = 100;
-	int idx_j = 150;	
+	int idx_j = 100;	
 
-	void *kernel_args[] = {&idx_i, &idx_j, &m, &n, data_d, areas};
-	find_largest_rectangle<<<grid, block>>>(idx_i, idx_j, m, n, data_d, areas);
+
+	void *kernel_args[] = {&idx_i, &idx_j, &m, &n, &data_d, &areas_d};
+	
+	/*find_largest_rectangle_params<<<grid, block>>>(params_ptr);*/
+	/*find_largest_rectangle<<<grid, block>>>(idx_i, idx_j, m, n, data_d, areas_d);*/
+	
+	cudaLaunchCooperativeKernel((void *)find_largest_rectangle, grid, block, kernel_args);
 	cudaDeviceSynchronize();
+	
+	cudaMemcpy(areas, areas_d, sizeof(int)*grid_x*grid_y, cudaMemcpyDeviceToHost);
+
+	printf("areas %d \n ", areas[0]);
 
 
 	return 0;
