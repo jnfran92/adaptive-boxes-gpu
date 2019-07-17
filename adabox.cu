@@ -1,23 +1,30 @@
-#include <curand.h>
+
 #include <curand_kernel.h>
-#include <math.h>
+#include <cuda.h>
 
 #include "stdlib.h"
-/*#include "cstdlib"*/
+#include <math.h>
 #include <cooperative_groups.h>
-
+#include <iostream>
+// thrust
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/reduce.h>
+#include <thrust/copy.h>
 // getters
 #include "./include/getters.h"
-
+// random
+#include "./include/random_generator.h"
 //data
 #include "./data/squares.h"
+//STL
+#include <vector>
 
+#define CC(x) do { if((x) != cudaSuccess) { \
+	    printf("Error at %s:%d\n",__FILE__,__LINE__); \
+	    return EXIT_FAILURE;}} while(0)
 
 // GPU kernels
-__global__ void find_random_numbers(){
-	
-}
-
 __global__ void remove_rectangle_from_matrix(int *coords, int *data_matrix, int m, int n){
 
 	int i = threadIdx.y;
@@ -36,10 +43,38 @@ __global__ void remove_rectangle_from_matrix(int *coords, int *data_matrix, int 
 			data_matrix[g_i*n + g_j] = 0;		
 		}
 	}
+
+
 }
 
 
-__global__ void find_largest_rectangle(int idx_ii, int idx_jj, long m, long n, int *data_matrix, int* areas, int *out){
+
+__global__ void generate_kernel(curandState *state){
+
+	int i = threadIdx.y;
+	int j = threadIdx.x;
+
+	int b_i = blockIdx.y;
+	int b_j = blockIdx.x;
+	int b_n = gridDim.x;
+	
+	if (j==0){
+		int id = b_i*b_n + b_j;
+		curandState localState = state[id];
+		
+		unsigned int x;
+		for(int g=0; g<100; g++){
+		 	x = curand(&localState)%1000;	
+			printf(" [%d] %u ",g,x);
+		}
+
+		printf("\n\n");
+		state[id] = localState;
+	}
+}
+
+
+__global__ void find_largest_rectangle(curandState *state, long m, long n, int *data_matrix, int* areas, int *out){
 
 	using namespace cooperative_groups;
 
@@ -49,6 +84,10 @@ __global__ void find_largest_rectangle(int idx_ii, int idx_jj, long m, long n, i
 	__shared__ int coords[coords_m * coords_n];
 	__shared__ int total_max;
 
+	__shared__ int idx_i;
+	__shared__ int idx_j;
+	
+	__shared__ bool is_sleeping;
 
 	int i = threadIdx.y;
 	int j = threadIdx.x;
@@ -58,28 +97,37 @@ __global__ void find_largest_rectangle(int idx_ii, int idx_jj, long m, long n, i
 	int b_n = gridDim.x;
 	
 	
-	// get random point, must be one on data matrix
-	int idx_i = 0;
-	int idx_j = 0;
+	// get random point, must be one on data matrix and set zero all areas values
 	if(j==0){
-		bool search_flag = false;
-		while(!search_flag){
-			idx_i = rand() % m;
-			idx_j = rand() % n;
 
+	       	areas[b_i*b_n + b_j] = 0;
+		total_max = 0;
 
-			
-
-
-			if (data_matrix[idx_i*n + idx_j] == 1){
-				printf("random idx_i %d   idx_j %d  \n",idx_i, idx_j);
-				search_flag = true;
+		int id = b_i*b_n + b_j;
+		curandState localState = state[id];
+		
+		unsigned int xx;
+		unsigned int yy;
+		for(int g=0; g<100; g++){
+			xx = curand(&localState);
+			yy = curand(&localState);
+		 	idx_i = abs((int)xx)%m;	
+			idx_j = abs((int)yy)%n;
+			if (data_matrix[idx_i*n + idx_j]==1){
+				/*printf(" found idx_i %d idx_j %d\n ",idx_i, idx_j);*/
+				is_sleeping = false;
 				break;
-			}		
+			}else{
+				is_sleeping = true;
+			}
 		}
+		state[id] = localState;
 	}
 	__syncthreads();
-
+	
+	// if sleeping true disable thread work
+	if (!is_sleeping){
+	
 	// expand the rectangle
 	int results[4] = {0,0,0,0};
 	if (j==0){
@@ -98,7 +146,6 @@ __global__ void find_largest_rectangle(int idx_ii, int idx_jj, long m, long n, i
 		get_left_top_rectangle(idx_i, idx_j, n, data_matrix, results);
 	}
 
-	/*printf("x1 %d    x2 %d   y1 %d   y2 %d   \n", results[0],  results[1],  results[2],  results[3]);*/
 	coords[j*coords_n + 0] = results[0];
 	coords[j*coords_n + 1] = results[1];
 	coords[j*coords_n + 2] = results[2];
@@ -106,7 +153,7 @@ __global__ void find_largest_rectangle(int idx_ii, int idx_jj, long m, long n, i
 
 	__syncthreads();
 
-
+	// merge last rectangles
 	if (j==0){
 		int a = coords[2*coords_n + 1];
 		int b = coords[3*coords_n + 1];
@@ -149,8 +196,6 @@ __global__ void find_largest_rectangle(int idx_ii, int idx_jj, long m, long n, i
 
 	__syncthreads();
 
-	/*printf("final x1 %d,   x2 %d,    y1 %d,    y2 %d \n",coords[4*coords_n + 0], coords[4*coords_n + 1],coords[4*coords_n + 2] ,coords[4*coords_n + 3]);*/
-
 	// get area
 	if (j==0){
 		int a = abs(coords[coords_n*4 + 0] -  coords[coords_n*4 + 1]);
@@ -158,50 +203,44 @@ __global__ void find_largest_rectangle(int idx_ii, int idx_jj, long m, long n, i
 		int area = a*b;
 	 	coords[coords_n*0 + 0] = area; // Saving area in coords[0][0]
 	       	areas[b_i*b_n + b_j] = area;
-		/*printf("bi %d    bj %d     bn %d\n", b_i,b_j,b_n);*/
-		/*printf("a %d    b %d    area %d, area mat %d\n", a,b,area, areas[b_i*b_n + b_j]);*/
 		/*printf("area %d\n", area);*/
 	}
 	__syncthreads();
 
 	// get max area all blocks
 	if (b_j == 0){
-		/*int temp_area = coords[0];*/
-		/*printf("bj %d     bi %d     j %d\n",b_j,b_i, j);*/
 		int temp_area = areas[b_i*b_n + j];
 		/*printf("temp_area %d    j %d \n", temp_area, j);*/
 		atomicMax(&total_max, temp_area);
 		__syncthreads();
 
 		if(j == 0){
-			/*printf("total max %d  of block %d\n", total_max, b_i);*/
 			areas[b_i*b_n + 0] = total_max;			
 			atomicMax(&areas[0*b_n + 0], total_max);
-			printf("total_max %d -  of block  %d \n", total_max, b_i);
+			/*printf("total_max %d -  of block  %d \n", total_max, b_i);*/
 		}
 	}
-	/*__syncthreads();*/
 
-
-
-	/*__syncthreads();*/
+	}
 
 	grid_group grid = this_grid();
 	grid.sync();
 
+	if (!is_sleeping){
 	// get final x1 x2 y1 y2
 	if (j == 0){
 		int a = coords[coords_n*0 + 0];
 		int b = areas[b_n*0 + 0];
-		printf("a %d, b %d\n",a,b);
+		/*printf("a %d, b %d\n",a,b);*/
 
 		if(a==b){
 			out[0] = coords[4*coords_n + 0];
 			out[1] = coords[4*coords_n + 1];
 			out[2] = coords[4*coords_n + 2];
 			out[3] = coords[4*coords_n + 3];
-			printf("final x1 %d,    x2 %d,    y1 %d,    y2 %d \n",coords[4*coords_n + 0], coords[4*coords_n + 1],coords[4*coords_n + 2] ,coords[4*coords_n + 3]);
+			/*printf("final x1 %d,    x2 %d,    y1 %d,    y2 %d \n",coords[4*coords_n + 0], coords[4*coords_n + 1],coords[4*coords_n + 2] ,coords[4*coords_n + 3]);*/
 		}
+	}
 	}
 }
 
@@ -212,28 +251,61 @@ __global__ void kernel(int *data, long m){
 	printf("it works %ld!!\n",m);
 }
 
+struct rectangle_t{
+	int x1;
+	int x2;
+	int y1;
+	int y2;
+};
+
+
 int main(){
 	printf("adaptive-boxes-gpu\n");
 	printf("GPU-accelerated rectangular decomposition for sound propagation modeling\n");
 
 	printf("m %ld , n% ld\n",m, n);
-	
 	printf("\n\n");
+
+	// Rectangles vector
+	std::vector<rectangle_t> recs;
+
+	/*rectangle_t rec{0,1,2,3};*/
+	/*[>rec.x1 = 0;<]*/
+	/*[>rec.x2 = 1;<]*/
+	/*[>rec.y1 = 2;<]*/
+	/*[>rec.y2 = 3;<]*/
+	/*recs.push_back(rec);*/
+	/*[>printf("vector size rectangles: %d  \n",recs.size());<]*/
+	/*std::cout << "vector size "<< recs.size() << std::endl;*/
+
+	/*std::vector<rectangle_t>::iterator v = recs.begin();*/
+	/*while(v !=recs.end()){*/
+		/*std::cout <<"  "<< v->x1 <<"  "<< v->x2 <<"  "<< v->y1 <<"  "<< v->y2 << std::endl;*/
+		/*v++;*/
+	/*}*/
 
 	// CUDA
 	//    number of tests = grid_x*grid_y	
 	int grid_x = 4; // fixedint grid_y = 50; //
 	int grid_y = 1; //
-	
+
+	// GPU data
 	int *data_d;
 	int *areas_d;
 	int *out_d;
 
-	// Get Mem
-	cudaMalloc((void **)&data_d, sizeof(int)*m*n );
-	cudaMalloc((void **)&areas_d, sizeof(int)*grid_x*grid_y ); 
-	cudaMalloc((void **)&out_d, sizeof(int)*4);
+	// Thrust Data
+	thrust::device_vector<int> t_data_d(m*n);	
+	data_d = thrust::raw_pointer_cast(&t_data_d[0]);
 	
+	thrust::device_vector<int> t_areas_d(grid_x*grid_y);
+	areas_d = thrust::raw_pointer_cast(&t_areas_d[0]);
+	
+	// Get Mem
+	/*cudaMalloc((void **)&data_d, sizeof(int)*m*n );*/
+	/*cudaMalloc((void **)&areas_d, sizeof(int)*grid_x*grid_y ); */
+	cudaMalloc((void **)&out_d, sizeof(int)*4);
+
 	// CPU mem
 	int *areas = new int[grid_x*grid_y];
 	int *out = new int[4];
@@ -241,6 +313,8 @@ int main(){
 	// Copy data to device memory
 	cudaMemcpy(data_d, data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
 
+	
+	// Grid and Block size
 	dim3 grid(grid_x, grid_y, 1);
 	dim3 block(4, 1, 1); // fixed size
 	
@@ -251,32 +325,81 @@ int main(){
 	int idx_j = 5;	
 
 
-	void *kernel_args[] = {&idx_i, &idx_j, &m, &n, &data_d, &areas_d, &out_d};
+	// curand
+	curandState *devStates;
+	CC(cudaMalloc((void **)&devStates, grid_x*grid_y*sizeof(unsigned int)));
 	
-	/*find_largest_rectangle_params<<<grid, block>>>(params_ptr);*/
-	/*find_largest_rectangle<<<grid, block>>>(idx_i, idx_j, m, n, data_d, areas_d);*/
-
+	// args ptr
+	void *kernel_args[] = {&devStates, &m, &n, &data_d, &areas_d, &out_d};
+	
 	// Init algorithm
-
-	cudaLaunchCooperativeKernel((void *)find_largest_rectangle, grid, block, kernel_args);
+	// Setup
+	setup_kernel<<<grid, block>>>(devStates);
 	cudaDeviceSynchronize();
+	
+	// Loop
+	rectangle_t rec;
+	int max_step = 4;
+	for (int step=0; step<max_step; step++){
 
-	remove_rectangle_from_matrix<<<image_grid, image_block>>>(out_d, data_d, m, n);
-	cudaDeviceSynchronize();
+		thrust::fill(t_areas_d.begin(), t_areas_d.end(), 0);
+		cudaDeviceSynchronize();
+		
+		cudaLaunchCooperativeKernel((void *)find_largest_rectangle, grid, block, kernel_args);
+		cudaDeviceSynchronize();
+
+		remove_rectangle_from_matrix<<<image_grid, image_block>>>(out_d, data_d, m, n);
+		cudaDeviceSynchronize();
+
+		int sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
+		printf("sum %d",sum);
+		cudaDeviceSynchronize();
+		
+		CC( cudaMemcpy(out, out_d, sizeof(int)*4, cudaMemcpyDeviceToHost)  );
+		cudaDeviceSynchronize();
+
+		rec.x1 = out[0];
+		rec.x2 = out[1];
+		rec.y1 = out[2];
+		rec.y2 = out[3];
+		recs.push_back(rec);
+
+		if(sum<=0){
+			break;
+		}
+	}
 
 	cudaMemcpy(data, data_d, sizeof(int)*m*n, cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
 	
-	
-	printf("----->Result  x1 %d     x2 %d    y1 %d     y2 %d \n ", out[0], out[1], out[2], out[3]);
-	printf("\n\n");
 
-	for (int i=0; i<m; i++){
-		for (int j=0; j<n; j++){
-			printf("%d ", data[i*n + j]);
-		}
-		printf("\n");
+	std::cout << "rectagles vector size "<< recs.size() << std::endl;
+	std::vector<rectangle_t>::iterator v = recs.begin();
+	while(v !=recs.end()){
+		std::cout <<"  "<< v->x1 <<"  "<< v->x2 <<"  "<< v->y1 <<"  "<< v->y2 << std::endl;
+		v++;
 	}
+
+
+
+
+	/*printf("\n\n");*/
+
+	/*for (int i=0; i<m; i++){*/
+		/*for (int j=0; j<n; j++){*/
+			/*printf("%d ", data[i*n + j]);*/
+		/*}*/
+		/*printf("\n");*/
+	/*}*/
+
+	delete areas;
+	delete out;
+
+	cudaFree(devStates);
+	cudaFree(out_d);
+
+
+
 
 
 	return 0;
