@@ -1,17 +1,45 @@
+#include <curand.h>
+#include <curand_kernel.h>
+#include <math.h>
 
-#include "stdio.h"
 #include "stdlib.h"
+/*#include "cstdlib"*/
 #include <cooperative_groups.h>
 
 // getters
 #include "./include/getters.h"
 
 //data
-#include "./data/complex.h"
+#include "./data/squares.h"
 
 
-// GPU kernel
-__global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int *data_matrix, int* areas){
+// GPU kernels
+__global__ void find_random_numbers(){
+	
+}
+
+__global__ void remove_rectangle_from_matrix(int *coords, int *data_matrix, int m, int n){
+
+	int i = threadIdx.y;
+	int j = threadIdx.x;
+	
+	int g_i = blockDim.y*blockIdx.y + i;
+	int g_j = blockDim.x*blockIdx.x + j;
+
+	int x1 = coords[0];
+	int x2 = coords[1];
+	int y1 = coords[2];
+	int y2 = coords[3];
+
+	if ( (g_i >= y1) & (g_i <= y2)){
+		if ( (g_j >= x1) & (g_j <= x2)){
+			data_matrix[g_i*n + g_j] = 0;		
+		}
+	}
+}
+
+
+__global__ void find_largest_rectangle(int idx_ii, int idx_jj, long m, long n, int *data_matrix, int* areas, int *out){
 
 	using namespace cooperative_groups;
 
@@ -22,46 +50,52 @@ __global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int
 	__shared__ int total_max;
 
 
-	/*int idx_i = *((int *)args[0]);*/
-	/*int idx_j = *((int *)args[1]);*/
-	/*long m = *((long *)args[2]);*/
-	/*long n = *((long *)args[3]);*/
-	/*int *data_matrix = ((int *)args[4]);*/
-	/*int *areas = ((int *)args[5]);*/
-
-	/*printf("idx_i %d, idx_j %d\n",idx_i,idx_j);*/
-
-
 	int i = threadIdx.y;
 	int j = threadIdx.x;
-
-
-	/*int g_i = blockDim.y * blockIdx.y + i;*/
-	/*int g_j = blockDim.x * blockIdx.x + j;*/
 
 	int b_i = blockIdx.y;
 	int b_j = blockIdx.x;
 	int b_n = gridDim.x;
-
-
-	/*printf("i %d  j %d   gi %d   gj %d \n",i,j,g_i,g_j);*/
 	
-	int results[4] = {};
+	
+	// get random point, must be one on data matrix
+	int idx_i = 0;
+	int idx_j = 0;
+	if(j==0){
+		bool search_flag = false;
+		while(!search_flag){
+			idx_i = rand() % m;
+			idx_j = rand() % n;
 
+
+			
+
+
+			if (data_matrix[idx_i*n + idx_j] == 1){
+				printf("random idx_i %d   idx_j %d  \n",idx_i, idx_j);
+				search_flag = true;
+				break;
+			}		
+		}
+	}
+	__syncthreads();
+
+	// expand the rectangle
+	int results[4] = {0,0,0,0};
 	if (j==0){
-		get_right_bottom_rectangle(idx_i + b_i, idx_j+ b_j, m, n, data_matrix, results);
+		get_right_bottom_rectangle(idx_i, idx_j, m, n, data_matrix, results);
 	}
 
 	if (j==1){
-		get_right_top_rectangle(idx_i + b_i, idx_j+ b_j, n, data_matrix, results);
+		get_right_top_rectangle(idx_i, idx_j, n, data_matrix, results);
 	}
 
 	if (j==2){
-		get_left_bottom_rectangle(idx_i + b_i, idx_j+ b_j, m, n, data_matrix, results);
+		get_left_bottom_rectangle(idx_i, idx_j, m, n, data_matrix, results);
 	}
 
 	if (j==3){
-		get_left_top_rectangle(idx_i + b_i, idx_j+ b_j, n, data_matrix, results);
+		get_left_top_rectangle(idx_i, idx_j, n, data_matrix, results);
 	}
 
 	/*printf("x1 %d    x2 %d   y1 %d   y2 %d   \n", results[0],  results[1],  results[2],  results[3]);*/
@@ -140,13 +174,13 @@ __global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int
 		__syncthreads();
 
 		if(j == 0){
-			printf("total max %d  of block %d\n", total_max, b_i);
-			/*areas[b_i*b_n + 0] = total_max;			*/
-			/*atomicMax(&areas[0*b_n + 0], total_max);*/
-			/*printf("total_max %d -  bi  %d \n", total_max, b_i);*/
+			/*printf("total max %d  of block %d\n", total_max, b_i);*/
+			areas[b_i*b_n + 0] = total_max;			
+			atomicMax(&areas[0*b_n + 0], total_max);
+			printf("total_max %d -  of block  %d \n", total_max, b_i);
 		}
 	}
-	__syncthreads();
+	/*__syncthreads();*/
 
 
 
@@ -162,6 +196,10 @@ __global__ void find_largest_rectangle(int idx_i, int idx_j, long m, long n, int
 		printf("a %d, b %d\n",a,b);
 
 		if(a==b){
+			out[0] = coords[4*coords_n + 0];
+			out[1] = coords[4*coords_n + 1];
+			out[2] = coords[4*coords_n + 2];
+			out[3] = coords[4*coords_n + 3];
 			printf("final x1 %d,    x2 %d,    y1 %d,    y2 %d \n",coords[4*coords_n + 0], coords[4*coords_n + 1],coords[4*coords_n + 2] ,coords[4*coords_n + 3]);
 		}
 	}
@@ -180,43 +218,25 @@ int main(){
 
 	printf("m %ld , n% ld\n",m, n);
 	
-	/*int out[4] = {};	*/
-
-	/*int a = 1;*/
-	/*long b = 2;*/
-	/*int c[3] = {1,2,3};*/
-	/*void *args[] = {&a, &b, c};*/
-	/*print_pointers(args);*/
-	
-	
-
-
-	/*get_right_bottom_rectangle(8, 10, m, n, data, out);*/
-	/*printf("--->x1 %d    x2 %d   y1 %d   y2 %d   \n", out[0],  out[1],  out[2],  out[3]);*/
-	/*get_left_bottom_rectangle(8, 10, m, n, data, out);*/
-	/*printf("--->x1 %d    x2 %d   y1 %d   y2 %d   \n", out[0],  out[1],  out[2],  out[3]);*/
-	/*get_left_top_rectangle(8, 10, n, data, out);*/
-	/*printf("--->x1 %d    x2 %d   y1 %d   y2 %d   \n", out[0],  out[1],  out[2],  out[3]);*/
-	/*get_right_top_rectangle(8, 10, n, data, out);*/
-	/*printf("--->x1 %d    x2 %d   y1 %d   y2 %d   \n", out[0],  out[1],  out[2],  out[3]);*/
-
 	printf("\n\n");
 
 	// CUDA
 	//    number of tests = grid_x*grid_y	
 	int grid_x = 4; // fixedint grid_y = 50; //
-	int grid_y = 10; //
+	int grid_y = 1; //
 	
 	int *data_d;
 	int *areas_d;
+	int *out_d;
 
 	// Get Mem
 	cudaMalloc((void **)&data_d, sizeof(int)*m*n );
 	cudaMalloc((void **)&areas_d, sizeof(int)*grid_x*grid_y ); 
-
-	// CPU memKE
-
+	cudaMalloc((void **)&out_d, sizeof(int)*4);
+	
+	// CPU mem
 	int *areas = new int[grid_x*grid_y];
+	int *out = new int[4];
 
 	// Copy data to device memory
 	cudaMemcpy(data_d, data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
@@ -224,21 +244,39 @@ int main(){
 	dim3 grid(grid_x, grid_y, 1);
 	dim3 block(4, 1, 1); // fixed size
 	
-	int idx_i = 100;
-	int idx_j = 100;	
+	dim3 image_grid(2,2,1);
+	dim3 image_block(n/2,m/2,1);
+
+	int idx_i = 5;
+	int idx_j = 5;	
 
 
-	void *kernel_args[] = {&idx_i, &idx_j, &m, &n, &data_d, &areas_d};
+	void *kernel_args[] = {&idx_i, &idx_j, &m, &n, &data_d, &areas_d, &out_d};
 	
 	/*find_largest_rectangle_params<<<grid, block>>>(params_ptr);*/
 	/*find_largest_rectangle<<<grid, block>>>(idx_i, idx_j, m, n, data_d, areas_d);*/
-	
+
+	// Init algorithm
+
 	cudaLaunchCooperativeKernel((void *)find_largest_rectangle, grid, block, kernel_args);
 	cudaDeviceSynchronize();
-	
-	cudaMemcpy(areas, areas_d, sizeof(int)*grid_x*grid_y, cudaMemcpyDeviceToHost);
 
-	printf("areas %d \n ", areas[0]);
+	remove_rectangle_from_matrix<<<image_grid, image_block>>>(out_d, data_d, m, n);
+	cudaDeviceSynchronize();
+
+	cudaMemcpy(data, data_d, sizeof(int)*m*n, cudaMemcpyDeviceToHost);
+	cudaDeviceSynchronize();
+	
+	
+	printf("----->Result  x1 %d     x2 %d    y1 %d     y2 %d \n ", out[0], out[1], out[2], out[3]);
+	printf("\n\n");
+
+	for (int i=0; i<m; i++){
+		for (int j=0; j<n; j++){
+			printf("%d ", data[i*n + j]);
+		}
+		printf("\n");
+	}
 
 
 	return 0;
