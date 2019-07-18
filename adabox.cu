@@ -7,6 +7,7 @@
 #include <cooperative_groups.h>
 #include <iostream>
 #include <fstream>
+#include <string>
 // thrust
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -17,7 +18,7 @@
 // random
 #include "./include/random_generator.h"
 //data
-#include "./data/complex.h"
+#include "./data/boston12.h"
 //STL
 #include <vector>
 
@@ -260,7 +261,7 @@ struct rectangle_t{
 };
 
 
-int main(){
+int main(int argc, char *argv[]){
 	printf("adaptive-boxes-gpu\n");
 	printf("GPU-accelerated rectangular decomposition for sound propagation modeling\n");
 
@@ -274,7 +275,8 @@ int main(){
 	//    number of tests = grid_x*grid_y	
 	std::cout << "grid config" << std::endl;
 	int grid_x = 4; // fixed
-	int grid_y = 1; //
+	int grid_y = atoi(argv[1]); //
+	printf("number of tests: %d \n",grid_x*grid_y);
 
 	// GPU data
 	int *data_d;
@@ -373,13 +375,16 @@ int main(){
 	// Saving data in csv format
 
 	std::ofstream r_file;
-	r_file.open("rectangles.csv");
+	std::string file_name = "boston12_";
+	file_name += std::to_string(grid_x*grid_y);
+	file_name += ".csv";
+	r_file.open(file_name);
 
 	std::cout << "saving rectagles -  vector size "<< recs.size() << std::endl;
 	std::vector<rectangle_t>::iterator v = recs.begin();
 	while(v !=recs.end()){
 		/*std::cout <<"  "<< v->x1 <<"  "<< v->x2 <<"  "<< v->y1 <<"  "<< v->y2 << std::endl;*/
-		r_file <<"  "<< v->x1 <<",  "<< v->x2 <<",  "<< v->y1 <<",  "<< v->y2 << ",  " << "\n";
+		r_file << v->x1 <<",  "<< v->x2 <<",  "<< v->y1 <<",  "<< v->y2 << "\n";
 		v++;
 	}
 	
