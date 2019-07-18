@@ -19,7 +19,7 @@
 // rectangle struct
 #include "./include/rectangle.h"
 // data
-#include "./data/complex.h"
+#include "./data/boston12.h"
 
 
 int main(int argc, char *argv[]){
@@ -28,6 +28,11 @@ int main(int argc, char *argv[]){
 
 	printf("----> Data size: m %ld , n% ld\n",m, n);
 
+	// CUDA timers
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+
 	// Rectangles vector
 	std::vector<rectangle_t> recs;
 
@@ -35,7 +40,7 @@ int main(int argc, char *argv[]){
 	//    number of tests = grid_x*grid_y	
 	int grid_x = 4; // fixed
 	int grid_y = atoi(argv[1]); //
-	printf("number of tests: %d \n",grid_x*grid_y);
+	printf("----> Number of tests: %d \n",grid_x*grid_y);
 
 	// GPU data
 	int *data_d;
@@ -75,6 +80,8 @@ int main(int argc, char *argv[]){
 	
 	// Init algorithm -----------------------
 	// Setup
+	cudaEventRecord(start);
+
 	setup_kernel<<<grid, block>>>(devStates);
 	cudaDeviceSynchronize();
 	
@@ -114,15 +121,21 @@ int main(int argc, char *argv[]){
 		}
 	}
 
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start, stop);
 	printf("Decomposition ready!!\n");
-	printf("last sum %d\n",sum);
-	cudaMemcpy(data, data_d, sizeof(int)*m*n, cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	printf("-->Elapsed time: %f\n", milliseconds);
+	printf("-->Last sum %d\n",sum);
+	
+	/*cudaMemcpy(data, data_d, sizeof(int)*m*n, cudaMemcpyDeviceToHost);*/
+	/*cudaDeviceSynchronize();*/
 	
 
 	// Saving data in csv format
 	std::ofstream r_file;
-	std::string file_name = "./results/complex_";
+	std::string file_name = "./results/boston12_";
 	file_name += std::to_string(grid_x*grid_y);
 	file_name += ".csv";
 	r_file.open(file_name);
