@@ -75,8 +75,6 @@ int main(int argc, char *argv[]){
 	curandState *devStates;
 	CC(cudaMalloc((void **)&devStates, grid_x*grid_y*sizeof(unsigned int)));
 	
-	// args ptr
-	void *kernel_args[] = {&devStates, &m, &n, &data_d, &areas_d, &out_d};
 	
 	// Init algorithm -----------------------
 	// Setup
@@ -84,7 +82,10 @@ int main(int argc, char *argv[]){
 
 	setup_kernel<<<grid, block>>>(devStates);
 	cudaDeviceSynchronize();
-	
+
+	// args ptr - to use cooperative threads 
+	void *kernel_args[] = {&devStates, &m, &n, &data_d, &areas_d, &out_d};
+
 	// Loop
 	printf("Working...\n");
 	rectangle_t rec;
@@ -92,32 +93,42 @@ int main(int argc, char *argv[]){
 	int sum;
 	// init last sum
 	int last_sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
+	int last_x1 = -1;
+	int last_x2 = -1;
+	int last_y1 = -1;
+	int last_y2 = -1;
 
 	for (int step=0; step<max_step; step++){
 
 		cudaLaunchCooperativeKernel((void *)find_largest_rectangle, grid, block, kernel_args);
 		cudaDeviceSynchronize();
 
-		remove_rectangle_from_matrix<<<image_grid, image_block>>>(out_d, data_d, m, n);
-		cudaDeviceSynchronize();
-		
-		sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
-		/*printf("sum %d\n",sum);*/
-		cudaDeviceSynchronize();
-		
 		CC( cudaMemcpy(out, out_d, sizeof(int)*4, cudaMemcpyDeviceToHost)  );
-		cudaDeviceSynchronize();
 
-		if(sum < last_sum){
-			rec.x1 = out[0];
-			rec.x2 = out[1];
-			rec.y1 = out[2];
-			rec.y2 = out[3];
-			recs.push_back(rec);
-		}
-		last_sum = sum;
-		if(sum<=0){
-			break;
+		if (!((last_x1==out[0]) & (last_x2==out[1]) & (last_y1==out[2]) & (last_y2==out[3])) ){
+			
+			remove_rectangle_from_matrix<<<image_grid, image_block>>>(out_d, data_d, m, n);
+			cudaDeviceSynchronize();
+			
+			sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
+			cudaDeviceSynchronize();
+			
+			if(sum < last_sum){
+				rec.x1 = out[0];
+				rec.x2 = out[1];
+				rec.y1 = out[2];
+				rec.y2 = out[3];
+				recs.push_back(rec);
+			}
+			
+			last_sum = sum;
+			if(sum<=0){
+				break;
+			}
+			last_x1 = out[0];
+			last_x2 = out[1];
+			last_y1 = out[2];
+			last_y2 = out[3];	
 		}
 	}
 

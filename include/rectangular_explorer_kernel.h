@@ -1,7 +1,6 @@
 
 #include <math.h>
 #include <cooperative_groups.h>
-
 // getters
 #include "./getters.h"
 // random
@@ -55,7 +54,6 @@ __global__ void find_largest_rectangle(curandState *state, long m, long n, int *
 	
 	
 	/* GET RANDOM POINT: the value of that random point in the matrix must be one(1)
-
 	 */
 	if(j==0){
 
