@@ -6,6 +6,7 @@
 #include <math.h>
 #include <cooperative_groups.h>
 #include <iostream>
+#include <fstream>
 // thrust
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -369,13 +370,20 @@ int main(){
 	cudaDeviceSynchronize();
 	
 
-	std::cout << "rectagles vector size "<< recs.size() << std::endl;
+	// Saving data in csv format
+
+	std::ofstream r_file;
+	r_file.open("rectangles.csv");
+
+	std::cout << "saving rectagles -  vector size "<< recs.size() << std::endl;
 	std::vector<rectangle_t>::iterator v = recs.begin();
 	while(v !=recs.end()){
-		std::cout <<"  "<< v->x1 <<"  "<< v->x2 <<"  "<< v->y1 <<"  "<< v->y2 << std::endl;
+		/*std::cout <<"  "<< v->x1 <<"  "<< v->x2 <<"  "<< v->y1 <<"  "<< v->y2 << std::endl;*/
+		r_file <<"  "<< v->x1 <<",  "<< v->x2 <<",  "<< v->y1 <<",  "<< v->y2 << ",  " << "\n";
 		v++;
 	}
-
+	
+	r_file.close();
 
 
 
