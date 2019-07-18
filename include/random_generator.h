@@ -2,11 +2,10 @@
 #include <cuda.h>
 #include <curand_kernel.h>
 
-
 __global__ void setup_kernel(curandState *state)
 {
 
-	int i = threadIdx.y;
+	//int i = threadIdx.y;
 	int j = threadIdx.x;
 
 	int b_i = blockIdx.y;
