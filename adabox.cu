@@ -16,7 +16,7 @@
 // random
 #include "./include/random_generator.h"
 //data
-#include "./data/squares.h"
+#include "./data/complex.h"
 //STL
 #include <vector>
 
@@ -25,7 +25,7 @@
 	    return EXIT_FAILURE;}} while(0)
 
 // GPU kernels
-__global__ void remove_rectangle_from_matrix(int *coords, int *data_matrix, int m, int n){
+__global__ void remove_rectangle_from_matrix(int *coords, int *data_matrix, long m, long n){
 
 	int i = threadIdx.y;
 	int j = threadIdx.x;
@@ -38,13 +38,13 @@ __global__ void remove_rectangle_from_matrix(int *coords, int *data_matrix, int 
 	int y1 = coords[2];
 	int y2 = coords[3];
 
+	/*printf("gi gj  %d %d\n", g_i, g_j);*/
+
 	if ( (g_i >= y1) & (g_i <= y2)){
 		if ( (g_j >= x1) & (g_j <= x2)){
 			data_matrix[g_i*n + g_j] = 0;		
 		}
 	}
-
-
 }
 
 
@@ -108,7 +108,7 @@ __global__ void find_largest_rectangle(curandState *state, long m, long n, int *
 		
 		unsigned int xx;
 		unsigned int yy;
-		for(int g=0; g<100; g++){
+		for(int g=0; g<200; g++){
 			xx = curand(&localState);
 			yy = curand(&localState);
 		 	idx_i = abs((int)xx)%m;	
@@ -269,24 +269,10 @@ int main(){
 	// Rectangles vector
 	std::vector<rectangle_t> recs;
 
-	/*rectangle_t rec{0,1,2,3};*/
-	/*[>rec.x1 = 0;<]*/
-	/*[>rec.x2 = 1;<]*/
-	/*[>rec.y1 = 2;<]*/
-	/*[>rec.y2 = 3;<]*/
-	/*recs.push_back(rec);*/
-	/*[>printf("vector size rectangles: %d  \n",recs.size());<]*/
-	/*std::cout << "vector size "<< recs.size() << std::endl;*/
-
-	/*std::vector<rectangle_t>::iterator v = recs.begin();*/
-	/*while(v !=recs.end()){*/
-		/*std::cout <<"  "<< v->x1 <<"  "<< v->x2 <<"  "<< v->y1 <<"  "<< v->y2 << std::endl;*/
-		/*v++;*/
-	/*}*/
-
 	// CUDA
 	//    number of tests = grid_x*grid_y	
-	int grid_x = 4; // fixedint grid_y = 50; //
+	std::cout << "grid config" << std::endl;
+	int grid_x = 4; // fixed
 	int grid_y = 1; //
 
 	// GPU data
@@ -295,15 +281,15 @@ int main(){
 	int *out_d;
 
 	// Thrust Data
+	std::cout << "thrust" << std::endl;
 	thrust::device_vector<int> t_data_d(m*n);	
 	data_d = thrust::raw_pointer_cast(&t_data_d[0]);
-	
+
+	std::cout << "thrust" << std::endl;
 	thrust::device_vector<int> t_areas_d(grid_x*grid_y);
 	areas_d = thrust::raw_pointer_cast(&t_areas_d[0]);
 	
 	// Get Mem
-	/*cudaMalloc((void **)&data_d, sizeof(int)*m*n );*/
-	/*cudaMalloc((void **)&areas_d, sizeof(int)*grid_x*grid_y ); */
 	cudaMalloc((void **)&out_d, sizeof(int)*4);
 
 	// CPU mem
@@ -313,16 +299,12 @@ int main(){
 	// Copy data to device memory
 	cudaMemcpy(data_d, data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
 
-	
 	// Grid and Block size
 	dim3 grid(grid_x, grid_y, 1);
 	dim3 block(4, 1, 1); // fixed size
 	
-	dim3 image_grid(2,2,1);
-	dim3 image_block(n/2,m/2,1);
-
-	int idx_i = 5;
-	int idx_j = 5;	
+	dim3 image_grid(n/2,m/2,1);
+	dim3 image_block(2,2,1);
 
 
 	// curand
@@ -339,31 +321,45 @@ int main(){
 	
 	// Loop
 	rectangle_t rec;
-	int max_step = 4;
+	int max_step = 2000;
+	int sum;
+	// init last sum
+	int last_sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
+
 	for (int step=0; step<max_step; step++){
 
-		thrust::fill(t_areas_d.begin(), t_areas_d.end(), 0);
-		cudaDeviceSynchronize();
+		/*thrust::fill(t_areas_d.begin(), t_areas_d.end(), 0);*/
+		/*cudaDeviceSynchronize();*/
+		
+		/*printf("sum %d\n",sum);*/
+		/*std::cout << "step" << std::endl;*/
 		
 		cudaLaunchCooperativeKernel((void *)find_largest_rectangle, grid, block, kernel_args);
 		cudaDeviceSynchronize();
 
+		/*sum = thrust::reduce(t_data_d.begin(), t_data_d.end());*/
+		/*printf("sum %d\n",sum);*/
+
+		/*std::cout << "step" << std::endl;*/
 		remove_rectangle_from_matrix<<<image_grid, image_block>>>(out_d, data_d, m, n);
 		cudaDeviceSynchronize();
 
-		int sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
-		printf("sum %d",sum);
+		/*std::cout << "step" << std::endl;*/
+		sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
+		printf("sum %d\n",sum);
 		cudaDeviceSynchronize();
 		
 		CC( cudaMemcpy(out, out_d, sizeof(int)*4, cudaMemcpyDeviceToHost)  );
 		cudaDeviceSynchronize();
 
-		rec.x1 = out[0];
-		rec.x2 = out[1];
-		rec.y1 = out[2];
-		rec.y2 = out[3];
-		recs.push_back(rec);
-
+		if(sum < last_sum){
+			rec.x1 = out[0];
+			rec.x2 = out[1];
+			rec.y1 = out[2];
+			rec.y2 = out[3];
+			recs.push_back(rec);
+		}
+		last_sum = sum;
 		if(sum<=0){
 			break;
 		}
