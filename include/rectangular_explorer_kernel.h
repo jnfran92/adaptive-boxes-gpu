@@ -19,15 +19,8 @@
     [thread 2] left-bottom
     [thread 3] left-top
 
-    Each block has a largest rectangle that could find, in order to get the largest Rectangle, a reduction is performed
-    using CUDA AtomicMax.
-
-    The reduction process works on a grid of size(n,4), where n=0,1,2,3....
-    The number of tests goes from [4 to n*4], max number of test available is: 600*4
-
-    The reduction starts at row level, it means, getting the max area of: block[0,:], block[1,:], ... , block[n,:]
-    Lastly the reduction is performed at grid level. The rectangle with the max area is used and store in (int *out)
-
+    Each block has a largest rectangle that could find, in order to get the largest Rectangle, then compute the area and
+    stores in areas variable.
  */
 __global__ void find_largest_rectangle(curandState *state, long m, long n, int *data_matrix, int *out, int *areas){
 
