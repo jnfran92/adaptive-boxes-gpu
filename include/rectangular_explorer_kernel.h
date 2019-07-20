@@ -1,6 +1,5 @@
 
 #include <math.h>
-#include <cooperative_groups.h>
 // getters
 #include "./getters.h"
 // random
@@ -32,7 +31,6 @@
  */
 __global__ void find_largest_rectangle(curandState *state, long m, long n, int *data_matrix, int *out, int *areas){
 
-	//using namespace cooperative_groups;
 
 	const int coords_m = 5;
 	const int coords_n = 4;
@@ -56,9 +54,7 @@ __global__ void find_largest_rectangle(curandState *state, long m, long n, int *
 	/* GET RANDOM POINT: the value of that random point in the matrix must be one(1)
 	 */
 	if(j==0){
-		//printf("random\n");
 	        areas[b_i*b_n + b_j] = 0;
-		//total_max = 0;
 
 		int id = b_i*b_n + b_j;
 		curandState localState = state[id];
@@ -71,7 +67,6 @@ __global__ void find_largest_rectangle(curandState *state, long m, long n, int *
 		 	idx_i = abs((int)xx)%m;	
 			idx_j = abs((int)yy)%n;
 			if (data_matrix[idx_i*n + idx_j]==1){
-				/*printf(" found idx_i %d idx_j %d\n ",idx_i, idx_j);*/
 				is_sleeping = false;
 				break;
 			}else{
@@ -80,7 +75,6 @@ __global__ void find_largest_rectangle(curandState *state, long m, long n, int *
 		}
 		state[id] = localState;
 
-		//printf("random\n");
 	}
 	__syncthreads();
 	
@@ -162,126 +156,9 @@ __global__ void find_largest_rectangle(curandState *state, long m, long n, int *
 			int a = abs(coords[coords_n*4 + 0] -  coords[coords_n*4 + 1]) + 1;
 			int b = abs(coords[coords_n*4 + 2] -  coords[coords_n*4 + 3]) + 1;
 			int area = a*b;
-			//coords[coords_n*0 + 0] = area; // Saving area in coords[0][0]
 			areas[b_i*b_n + b_j] = area;
 		}
-		//__syncthreads();
-
-		/* Get max area all blocks
-		   We use the four threads of the first block to reduce the area of each block into one using temp_area variable
-
-		   | block 0,0 |    | block 0,1 |  | block 0,2 |  | block 0,3 |
-		   ''''''''''''      '''''''''''    '''''''''''    ''''''''''' 
-			 |                |               |              | (4 threads used, each thread acces max area of each block in the row) 	   
-			 -------------------------------------------------
-						 | (1 thread used to reduceMax of 4 adjacent blocks)
-						 |
-					      temp_area
-						 |  (reduceMax of all remain blocks)
-						 |<--------------------------------------------------------- the same process in blocks of remain rows
-					       max Area (stored in global array in position[0][0])
-		 */
-		//if (b_j == 0){
-			//int temp_area = areas[b_i*b_n + j];
-			//[>printf("temp_area %d    j %d \n", temp_area, j);<]
-			//atomicMax(&total_max, temp_area);
-			//__syncthreads();
-
-			//if(j == 0){
-				//areas[b_i*b_n + 0] = total_max;			
-				//atomicMax(&areas[0*b_n + 0], total_max);
-				//[>printf("total_max %d -  of block  %d \n", total_max, b_i);<]
-		
-				//printf("end atomic max row block level\n");
-			//}
-		//}
-
 	}
 
-	//grid_group grid = this_grid();
-	//grid.sync();
-
-	//if (!is_sleeping){
-	//// get final x1 x2 y1 y2
-		//if (b_j == 0){
-
-			//printf("last writting\n");
-			//int a = coords[coords_n*0 + 0];
-			//int b = areas[b_n*0 + 0];
-			//[>printf("a %d, b %d\n",a,b);<]
-
-			//if(a==b){
-				//out[j] = coords[4*coords_n + j];
-			//}
-		//}
-	//}
 }
-
-
-//__global__ void reduce_areas(int *areas, int *out){
-
-
-
-		//if (j==0){
-			//int a = abs(coords[coords_n*4 + 0] -  coords[coords_n*4 + 1]);
-			//int b = abs(coords[coords_n*4 + 2] -  coords[coords_n*4 + 3]);
-			//int area = a*b;
-			//coords[coords_n*0 + 0] = area; // Saving area in coords[0][0]
-			//areas[b_i*b_n + b_j] = area;
-			//[>printf("area %d\n", area);<]
-		//}
-		//__syncthreads();
-
-
-
-		//[> Get max area all blocks
-		   //We use the four threads of the first block to reduce the area of each block into one using temp_area variable
-
-		   //| block 0,0 |    | block 0,1 |  | block 0,2 |  | block 0,3 |
-		   //''''''''''''      '''''''''''    '''''''''''    ''''''''''' 
-			 //|                |               |              | (4 threads used, each thread acces max area of each block in the row) 	   
-			 //-------------------------------------------------
-						 //| (1 thread used to reduceMax of 4 adjacent blocks)
-						 //|
-					      //temp_area
-						 //|  (reduceMax of all remain blocks)
-						 //|<--------------------------------------------------------- the same process in blocks of remain rows
-					       //max Area (stored in global array in position[0][0])
-		 //*/
-		//if (b_j == 0){
-			//int temp_area = areas[b_i*b_n + j];
-			//[>printf("temp_area %d    j %d \n", temp_area, j);<]
-			//atomicMax(&total_max, temp_area);
-			//__syncthreads();
-
-			//if(j == 0){
-				//areas[b_i*b_n + 0] = total_max;			
-				//atomicMax(&areas[0*b_n + 0], total_max);
-				//[>printf("total_max %d -  of block  %d \n", total_max, b_i);<]
-		
-				//printf("end atomic max row block level\n");
-			//}
-		//}
-
-
-	//grid_group grid = this_grid();
-	//grid.sync();
-
-	//if (!is_sleeping){
-	//// get final x1 x2 y1 y2
-		//if (b_j == 0){
-
-			//printf("last writting\n");
-			//int a = coords[coords_n*0 + 0];
-			//int b = areas[b_n*0 + 0];
-			//[>printf("a %d, b %d\n",a,b);<]
-
-			//if(a==b){
-				//out[j] = coords[4*coords_n + j];
-			//}
-		//}
-	//}
-//}
-
-
 
