@@ -74,20 +74,17 @@ int main(int argc, char *argv[]){
 	dim3 image_grid(n/2,m/2,1);
 	dim3 image_block(2,2,1);
 
+	
+	
+	// Init algorithm -----------------------
+	cudaEventRecord(start);
+	// Setup
 	// curand
 	curandState *devStates;
 	CC(cudaMalloc((void **)&devStates, grid_x*grid_y*sizeof(unsigned int)));
 	
-	
-	// Init algorithm -----------------------
-	// Setup
-	cudaEventRecord(start);
-
 	setup_kernel<<<grid, block>>>(devStates);
 	cudaDeviceSynchronize();
-
-	// args ptr - to use cooperative threads 
-	void *kernel_args[] = {&devStates, &m, &n, &data_d, &out_d};
 
 	// Loop
 	printf("Working...\n");
@@ -104,31 +101,14 @@ int main(int argc, char *argv[]){
 	int x1,x2,y1,y2;
 
 	for (int step=0; step<max_step; step++){
-		/*printf("step\n");*/
-	
-		/*cudaLaunchCooperativeKernel((void *)find_largest_rectangle, grid, block, kernel_args);*/
-		/*thrust::fill(t_areas_d.begin(),t_areas_d.end(),0);*/
-		/*thrust::fill(t_out_d.begin(),t_out_d.end(),0);*/
-
 		
 		find_largest_rectangle<<<grid,block>>>(devStates,m,n,data_d,out_d, areas_d);
 		cudaDeviceSynchronize();
-		/*CC( cudaMemcpy(out, out_d, sizeof(int)*4*grid_x*grid_y, cudaMemcpyDeviceToHost)  );*/
-		
-		/*for (int i=0; i<grid_y*4; i++){*/
-			/*std::cout <<  t_out_d[i*grid_x + 0] << "  ";*/
-			/*std::cout <<  t_out_d[i*grid_x + 1] << "  ";*/
-			/*std::cout <<  t_out_d[i*grid_x + 2] << "  ";*/
-			/*std::cout <<  t_out_d[i*grid_x + 3] << "  ";*/
-			/*std::cout << std::endl;*/
-		/*}	*/
 		
 		thrust::device_vector<int>::iterator iter = thrust::max_element(t_areas_d.begin(), t_areas_d.end());
 		unsigned int position = iter - t_areas_d.begin();
 		int max_val = *iter; 
 			
-		/*std::cout << "max val "<<max_val<< " at position: "<<position<< std::endl;*/
-		
 		if (max_val==0){
 			continue;
 		}
@@ -138,7 +118,6 @@ int main(int argc, char *argv[]){
 		y1 = t_out_d[position*4 + 2];  
 		y2 = t_out_d[position*4 + 3];  
 	
-		/*printf("%d %d %d %d \n",x1,x2,y1,y2); */
 
 		if (!((last_x1==x1) & (last_x2==x2) & (last_y1==y1) & (last_y2==y2)) ){
 			
@@ -175,10 +154,7 @@ int main(int argc, char *argv[]){
 	printf("-->Elapsed time: %f\n", milliseconds);
 	printf("-->Last sum %d\n",sum);
 	
-	/*cudaMemcpy(data, data_d, sizeof(int)*m*n, cudaMemcpyDeviceToHost);*/
-	/*cudaDeviceSynchronize();*/
 	
-
 	// Saving data in csv format
 	std::ofstream r_file;
 	std::string file_name = "./results/hall10_";
