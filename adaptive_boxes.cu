@@ -19,7 +19,7 @@
 // rectangle struct
 #include "./include/rectangle.h"
 // data
-#include "./data/boston12.h"
+#include "./data/hall10.h"
 
 
 int main(int argc, char *argv[]){
@@ -53,13 +53,16 @@ int main(int argc, char *argv[]){
 
 	thrust::device_vector<int> t_areas_d(grid_x*grid_y);
 	areas_d = thrust::raw_pointer_cast(&t_areas_d[0]);
+
+	thrust::device_vector<int> t_out_d(grid_x*grid_y*4);
+	out_d = thrust::raw_pointer_cast(&t_out_d[0]);	
 	
 	// Get Mem
-	cudaMalloc((void **)&out_d, sizeof(int)*4);
+	/*cudaMalloc((void **)&out_d, sizeof(int)*4*grid_x*grid_y);*/
 
 	// CPU mem
 	int *areas = new int[grid_x*grid_y];
-	int *out = new int[4];
+	int *out = new int[4*grid_x*grid_y];
 
 	// Copy data to device memory
 	cudaMemcpy(data_d, data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
@@ -84,12 +87,12 @@ int main(int argc, char *argv[]){
 	cudaDeviceSynchronize();
 
 	// args ptr - to use cooperative threads 
-	void *kernel_args[] = {&devStates, &m, &n, &data_d, &areas_d, &out_d};
+	void *kernel_args[] = {&devStates, &m, &n, &data_d, &out_d};
 
 	// Loop
 	printf("Working...\n");
 	rectangle_t rec;
-	int max_step = 8000;
+	int max_step = 10000000;
 	int sum;
 	// init last sum
 	int last_sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
@@ -97,27 +100,59 @@ int main(int argc, char *argv[]){
 	int last_x2 = -1;
 	int last_y1 = -1;
 	int last_y2 = -1;
+	
+	int x1,x2,y1,y2;
 
 	for (int step=0; step<max_step; step++){
+		/*printf("step\n");*/
+	
+		/*cudaLaunchCooperativeKernel((void *)find_largest_rectangle, grid, block, kernel_args);*/
+		/*thrust::fill(t_areas_d.begin(),t_areas_d.end(),0);*/
+		/*thrust::fill(t_out_d.begin(),t_out_d.end(),0);*/
 
-		cudaLaunchCooperativeKernel((void *)find_largest_rectangle, grid, block, kernel_args);
+		
+		find_largest_rectangle<<<grid,block>>>(devStates,m,n,data_d,out_d, areas_d);
 		cudaDeviceSynchronize();
-
-		CC( cudaMemcpy(out, out_d, sizeof(int)*4, cudaMemcpyDeviceToHost)  );
-
-		if (!((last_x1==out[0]) & (last_x2==out[1]) & (last_y1==out[2]) & (last_y2==out[3])) ){
+		/*CC( cudaMemcpy(out, out_d, sizeof(int)*4*grid_x*grid_y, cudaMemcpyDeviceToHost)  );*/
+		
+		/*for (int i=0; i<grid_y*4; i++){*/
+			/*std::cout <<  t_out_d[i*grid_x + 0] << "  ";*/
+			/*std::cout <<  t_out_d[i*grid_x + 1] << "  ";*/
+			/*std::cout <<  t_out_d[i*grid_x + 2] << "  ";*/
+			/*std::cout <<  t_out_d[i*grid_x + 3] << "  ";*/
+			/*std::cout << std::endl;*/
+		/*}	*/
+		
+		thrust::device_vector<int>::iterator iter = thrust::max_element(t_areas_d.begin(), t_areas_d.end());
+		unsigned int position = iter - t_areas_d.begin();
+		int max_val = *iter; 
 			
-			remove_rectangle_from_matrix<<<image_grid, image_block>>>(out_d, data_d, m, n);
+		/*std::cout << "max val "<<max_val<< " at position: "<<position<< std::endl;*/
+		
+		if (max_val==0){
+			continue;
+		}
+
+		x1 = t_out_d[position*4 + 0];  
+		x2 = t_out_d[position*4 + 1];  
+		y1 = t_out_d[position*4 + 2];  
+		y2 = t_out_d[position*4 + 3];  
+	
+		/*printf("%d %d %d %d \n",x1,x2,y1,y2); */
+
+		if (!((last_x1==x1) & (last_x2==x2) & (last_y1==y1) & (last_y2==y2)) ){
+			
+			remove_rectangle_from_matrix<<<image_grid, image_block>>>(x1,x2,y1,y2, data_d, m, n);
 			cudaDeviceSynchronize();
 			
 			sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
 			cudaDeviceSynchronize();
-			
+			/*printf("sum = %d\n",sum);			*/
 			if(sum < last_sum){
-				rec.x1 = out[0];
-				rec.x2 = out[1];
-				rec.y1 = out[2];
-				rec.y2 = out[3];
+				rec.x1 = x1;
+				rec.x2 = x2;
+				rec.y1 = y1;
+				rec.y2 = y2;
 				recs.push_back(rec);
 			}
 			
@@ -125,10 +160,10 @@ int main(int argc, char *argv[]){
 			if(sum<=0){
 				break;
 			}
-			last_x1 = out[0];
-			last_x2 = out[1];
-			last_y1 = out[2];
-			last_y2 = out[3];	
+			last_x1 = x1;
+			last_x2 = x2;
+			last_y1 = y1;
+			last_y2 = y2;	
 		}
 	}
 
@@ -146,7 +181,7 @@ int main(int argc, char *argv[]){
 
 	// Saving data in csv format
 	std::ofstream r_file;
-	std::string file_name = "./results/boston12_";
+	std::string file_name = "./results/hall10_";
 	file_name += std::to_string(grid_x*grid_y);
 	file_name += ".csv";
 	r_file.open(file_name);
@@ -165,7 +200,6 @@ int main(int argc, char *argv[]){
 	delete out;
 
 	cudaFree(devStates);
-	cudaFree(out_d);
 
 	return 0;
 }
