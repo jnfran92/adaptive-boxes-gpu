@@ -89,7 +89,7 @@ int main(int argc, char *argv[]){
 	// Loop
 	printf("Working...\n");
 	rectangle_t rec;
-	int max_step = 999999999;
+	int max_step = 999999;
 	int sum;
 	// init last sum
 	int last_sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
@@ -101,14 +101,16 @@ int main(int argc, char *argv[]){
 	int x1,x2,y1,y2;
 
 	for (int step=0; step<max_step; step++){
-		
+	printf("step\n");	
 		find_largest_rectangle<<<grid,block>>>(devStates,m,n,data_d,out_d, areas_d);
 		cudaDeviceSynchronize();
-		
+
+	printf("step largest done \n");	
 		thrust::device_vector<int>::iterator iter = thrust::max_element(t_areas_d.begin(), t_areas_d.end());
 		unsigned int position = iter - t_areas_d.begin();
 		int max_val = *iter; 
 			
+	printf("step max element done\n");	
 		if (max_val==0){
 			continue;
 		}
@@ -117,7 +119,8 @@ int main(int argc, char *argv[]){
 		x2 = t_out_d[position*4 + 1];  
 		y1 = t_out_d[position*4 + 2];  
 		y2 = t_out_d[position*4 + 3];  
-	
+
+	printf("get positions done\n");	
 
 		if (!((last_x1==x1) & (last_x2==x2) & (last_y1==y1) & (last_y2==y2)) ){
 			
@@ -126,7 +129,7 @@ int main(int argc, char *argv[]){
 			
 			sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
 			cudaDeviceSynchronize();
-			/*printf("sum = %d\n",sum);			*/
+			printf("sum = %d\n",sum);			
 			if(sum < last_sum){
 				rec.x1 = x1;
 				rec.x2 = x2;

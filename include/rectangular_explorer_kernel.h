@@ -57,8 +57,8 @@ __global__ void find_largest_rectangle(curandState *state, long m, long n, int *
 		for(int g=0; g<100; g++){
 			xx = curand(&localState);
 			yy = curand(&localState);
-		 	idx_i = abs((int)xx)%m;	
-			idx_j = abs((int)yy)%n;
+		 	idx_i = abs((int)xx)%(m);	
+			idx_j = abs((int)yy)%(n);
 			if (data_matrix[idx_i*n + idx_j]==1){
 				is_sleeping = false;
 				break;
@@ -68,6 +68,7 @@ __global__ void find_largest_rectangle(curandState *state, long m, long n, int *
 		}
 		state[id] = localState;
 
+		//printf("idx_i %d  idx_j %d \n",idx_i,idx_j);
 	}
 	__syncthreads();
 	
