@@ -89,7 +89,7 @@ int main(int argc, char *argv[]){
 	// Loop
 	printf("Working...\n");
 	rectangle_t rec;
-	int max_step = 10000000;
+	int max_step = 999999999;
 	int sum;
 	// init last sum
 	int last_sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
