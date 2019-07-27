@@ -19,7 +19,7 @@
 // rectangle struct
 #include "./include/rectangle.h"
 // data
-#include "./data/hall10.h"
+#include "./data/theatre12.h"
 
 
 int main(int argc, char *argv[]){
