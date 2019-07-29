@@ -1,2 +1,2 @@
 all:
-	nvcc test_getters.cu -o prog
+	nvcc test_getters.cu -o test
