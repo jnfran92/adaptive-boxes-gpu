@@ -6,7 +6,7 @@
 #include "./random_generator.h"
 
 // getters
-using namespace nrg;
+using namespace ng;
 
  /* 
     FIND THE LARGEST RECTANGLE:

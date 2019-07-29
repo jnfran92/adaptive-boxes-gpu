@@ -19,7 +19,7 @@
 // rectangle struct
 #include "./include/rectangle.h"
 // data
-#include "./data/squares.h"
+#include "./data/theatre12.h"
 
 
 int main(int argc, char *argv[]){
@@ -101,16 +101,13 @@ int main(int argc, char *argv[]){
 	int x1,x2,y1,y2;
 
 	for (int step=0; step<max_step; step++){
-	printf("step\n");	
 		find_largest_rectangle<<<grid,block>>>(devStates,m,n,data_d,out_d, areas_d);
 		cudaDeviceSynchronize();
-
-	printf("step largest done \n");	
+		
 		thrust::device_vector<int>::iterator iter = thrust::max_element(t_areas_d.begin(), t_areas_d.end());
 		unsigned int position = iter - t_areas_d.begin();
 		int max_val = *iter; 
 			
-	printf("step max element done\n");	
 		if (max_val==0){
 			continue;
 		}
@@ -120,16 +117,27 @@ int main(int argc, char *argv[]){
 		y1 = t_out_d[position*4 + 2];  
 		y2 = t_out_d[position*4 + 3];  
 
-	printf("get positions done\n");	
 
 		if (!((last_x1==x1) & (last_x2==x2) & (last_y1==y1) & (last_y2==y2)) ){
+		
 			
-			remove_rectangle_from_matrix<<<image_grid, image_block>>>(x1,x2,y1,y2, data_d, m, n);
+			int dist_y = (y2 - y1) + 1;
+			int dist_x = (x2 - x1) + 1;
+			int x_blocks = (int)ceil((double)dist_x/2.0);
+			int y_blocks = (int)ceil((double)dist_y/2.0);
+			/*printf("x1 %d   x2 %d   y1 %d   y2 %d \n",x1,x2,y1,y2);*/
+			/*printf("launching thread blocks: %d x %d\n",x_blocks, y_blocks);*/
+			
+			dim3 tmp_block(2, 2, 1);
+			dim3 tmp_grid(x_blocks, y_blocks, 1);
+
+			remove_rectangle_from_matrix_improved<<<tmp_grid, tmp_block>>>(x1,x2,y1,y2, data_d, m, n);
+			/*remove_rectangle_from_matrix<<<image_grid, image_block>>>(x1,x2,y1,y2, data_d, m, n);*/
 			cudaDeviceSynchronize();
 			
 			sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
 			cudaDeviceSynchronize();
-			printf("sum = %d\n",sum);			
+			printf("sum = %d  ratio = %f\n",sum, (double)sum/(double)last_sum);			
 			if(sum < last_sum){
 				rec.x1 = x1;
 				rec.x2 = x2;

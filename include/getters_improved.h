@@ -16,39 +16,40 @@ namespace ng{
 		int y2_val = 0;
 
 
-		int d0 = 0;
-		int i=0;
-		int j=0;	
+		int d0, di, dj;
+		
 		// Get the max distance in the axis
-		for (i=idx_i_arg; i<m_arg; i++){
+		di =0;
+		for (int i=idx_i_arg; i<m_arg; i++){
 			temp_val = data_matrix_arg[i * n_arg + idx_j_arg];
 			if(temp_val == 0){
-				i = i - 1;
 				break;
-			}	
+			}
+			di++;	
 		}
-		d0 = i;
+		d0 = di;
 
-		for (j=idx_j_arg + 1; j<n_arg; j++){
-			
-			for (i=idx_i_arg; i<=d0; i++){
+		dj = 0;
+		for (int j=idx_j_arg + 1; j<n_arg; j++){
+			di =0;
+			for (int i=idx_i_arg; i<(idx_i_arg + d0); i++){
 				temp_val = data_matrix_arg[i * n_arg + j];
 				if(temp_val == 0){
-					i = i - 1;
 					break;
-				}	
+				}
+				di++;	
 			}
 
-			if (i < d0){
-				j = j -1;
+			if (di < d0){
 				break;
 			}
+			dj++;
 		}
 		
 		x1_val = idx_j_arg;
 		y1_val = idx_i_arg;
-		x2_val =  j;
-		y2_val =  d0;
+		x2_val =  idx_j_arg + dj;
+		y2_val =  idx_i_arg + d0 - 1;
 
 		results[0] = x1_val;
 		results[1] = x2_val;
@@ -69,39 +70,40 @@ namespace ng{
 		int y2_val = 0;
 
 
-		int d0 = 0;
-		int i=0;
-		int j=0;	
+		int d0,dj,di;
+		
 		// Get the max distance in the axis
-		for (i=idx_i_arg; i<m_arg; i++){
+		di=0;
+		for (int i=idx_i_arg; i<m_arg; i++){
 			temp_val = data_matrix_arg[i * n_arg + idx_j_arg];
 			if(temp_val == 0){
-				i = i - 1;
 				break;
 			}	
+			di++;	
 		}
-		d0 = i;
+		d0 = di;
 
-		for (j=idx_j_arg - 1; j>=0; j--){
-
-			for (i=idx_i_arg; i<=d0; i++){
+		dj = 0;
+		for (int j=idx_j_arg - 1; j>=0; j--){
+			di = 0;
+			for (int i=idx_i_arg; i< (idx_i_arg + d0); i++){
 				temp_val = data_matrix_arg[i * n_arg + j];
 				if(temp_val == 0){
-					i = i -1;
 					break;
-				}	
+				}
+				di++;	
 			}
 
-			if (i < d0){
-				j = j + 1;
+			if (di < d0){
 				break;
 			}
+			dj++;
 		}
 		
 		x1_val = idx_j_arg;
 		y1_val = idx_i_arg;
-		x2_val =  j;
-		y2_val =  d0;
+		x2_val = idx_j_arg - dj;
+		y2_val = idx_i_arg + d0 - 1;
 
 		
 		results[0] = x1_val;
@@ -122,39 +124,40 @@ namespace ng{
 		int y2_val = 0;
 
 
-		int d0 = 0;
-		int i=0;
-		int j = 0;	
+		int d0, di, dj;
+		
 		// Get the max distance in the axis
-		for (i=idx_i_arg; i>=0; i--){
+		di = 0;
+		for (int i=idx_i_arg; i>-1; i--){
 			temp_val = data_matrix_arg[i * n_arg + idx_j_arg];
 			if(temp_val == 0){
-				i = i + 1;
 				break;
 			}	
+			di++;
 		}
-		d0 = i;
+		d0 = di;
 
-		for (j=idx_j_arg-1; j>=0; j--){
-
-			for (i=idx_i_arg; i>=d0; i--){
+		dj = 0;
+		for (int j=idx_j_arg - 1; j>-1; j--){
+			di = 0;
+			for (int i=idx_i_arg; i>(idx_i_arg - d0); i--){
 				temp_val = data_matrix_arg[i * n_arg + j];
 				if(temp_val == 0){
-					i = i + 1;
 					break;
 				}	
+				di++;
 			}
 
-			if (i > d0){
-				j = j + 1;
+			if (di < d0){
 				break;
 			}
+			dj++;
 		}
 		
 		x1_val = idx_j_arg;
 		y1_val = idx_i_arg;
-		x2_val =  j;
-		y2_val =  d0;
+		x2_val = idx_j_arg - dj;
+		y2_val = idx_i_arg - d0 + 1;
 
 
 		results[0] = x1_val;
@@ -174,39 +177,40 @@ namespace ng{
 		int y2_val = 0;
 
 
-		int d0 = 0;
-		int i=0;
-		int j=0;	
+		int d0, di, dj;
+		
 		// Get the max distance in the axis
-		for (i=idx_i_arg; i>=0; i--){
+		di = 0;
+		for (int i=idx_i_arg; i>-1; i--){
 			temp_val = data_matrix_arg[i * n_arg + idx_j_arg];
 			if(temp_val == 0){
-				i = i + 1;
 				break;
 			}	
+			di++;
 		}
-		d0 = i;
+		d0 = di;
 
-		for (j=idx_j_arg + 1; j<n_arg; j++){
-			
-			for (i=idx_i_arg; i>=d0; i--){
+		dj = 0;
+		for (int j=idx_j_arg + 1; j<n_arg; j++){
+			di = 0;	
+			for (int i=idx_i_arg; i>(idx_i_arg - d0); i--){
 				temp_val = data_matrix_arg[i * n_arg + j];
 				if(temp_val == 0){
-					i = i + 1;
 					break;
-				}	
+				}
+				di++;	
 			}
 
-			if (i > d0){
-				j = j - 1;
+			if (di < d0){
 				break;
 			}
+			dj++;
 		}
 		
 		x1_val = idx_j_arg;
 		y1_val = idx_i_arg;
-		x2_val = j;
-		y2_val = d0;
+		x2_val = idx_j_arg + dj;
+		y2_val = idx_i_arg - d0 + 1;
 
 
 		results[0] = x1_val;
