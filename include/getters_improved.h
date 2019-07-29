@@ -3,7 +3,7 @@
 #include "stdlib.h"
 
 // rgn: New  Rectangular Getters
-namespace nrg{
+namespace ng{
 	// results matrix: [x1 x2 y1 y2]
 	__device__ __host__ void get_right_bottom_rectangle(int idx_i_arg, int idx_j_arg, long m_arg, long n_arg, int *data_matrix_arg, int *results){
 
