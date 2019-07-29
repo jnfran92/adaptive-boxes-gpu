@@ -5,6 +5,9 @@
 // random
 #include "./random_generator.h"
 
+// getters
+using namespace nrg;
+
  /* 
     FIND THE LARGEST RECTANGLE:
     Kernel used for expand a rectangle as large as possible in the data matrix
