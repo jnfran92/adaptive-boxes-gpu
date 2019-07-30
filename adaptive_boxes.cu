@@ -37,14 +37,9 @@ int main(int argc, char *argv[]){
 	std::vector<rectangle_t> recs;
 
 	// CUDA
-	//    number of tests = grid_x*grid_y	
 	int grid_x = 4; // fixed
 	int grid_y = atoi(argv[1]); //
 	printf("----> Number of tests: %d \n",grid_x*grid_y);
-
-	// ratio limit
-	double ratio_limit = atof(argv[2]);
-	printf("----> Ratio Limit: %f\n", ratio_limit);
 	
 	// GPU data
 	int *data_d;
@@ -61,9 +56,6 @@ int main(int argc, char *argv[]){
 	thrust::device_vector<int> t_out_d(grid_x*grid_y*4);
 	out_d = thrust::raw_pointer_cast(&t_out_d[0]);	
 	
-	// Get Mem
-	/*cudaMalloc((void **)&out_d, sizeof(int)*4*grid_x*grid_y);*/
-
 	// CPU mem
 	int *areas = new int[grid_x*grid_y];
 	int *out = new int[4*grid_x*grid_y];
@@ -74,11 +66,6 @@ int main(int argc, char *argv[]){
 	// Grid and Block size
 	dim3 grid(grid_x, grid_y, 1);
 	dim3 block(4, 1, 1); // fixed size
-	
-	dim3 image_grid(n/2,m/2,1);
-	dim3 image_block(2,2,1);
-
-	
 	
 	// Init algorithm -----------------------
 	cudaEventRecord(start);
@@ -95,10 +82,10 @@ int main(int argc, char *argv[]){
 	rectangle_t rec;
 	int max_step = 999999;
 	int sum;
+	
 	// init last sum
-	double ratio = 1.0;
 	int last_sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
-	int global_sum = last_sum; 
+	
 	int last_x1 = -1;
 	int last_x2 = -1;
 	int last_y1 = -1;
@@ -135,11 +122,10 @@ int main(int argc, char *argv[]){
 			dim3 tmp_block(2, 2, 1);
 			dim3 tmp_grid(x_blocks, y_blocks, 1);
 
-			remove_rectangle_from_matrix_improved<<<tmp_grid, tmp_block>>>(x1,x2,y1,y2, data_d, m, n);
+			remove_rectangle_from_matrix<<<tmp_grid, tmp_block>>>(x1,x2,y1,y2, data_d, m, n);
 			cudaDeviceSynchronize();
 			
 			sum = thrust::reduce(t_data_d.begin(), t_data_d.end());
-			/*cudaDeviceSynchronize();*/
 			
 			if(sum < last_sum){
 				rec.x1 = x1;
@@ -150,8 +136,7 @@ int main(int argc, char *argv[]){
 			}
 			
 			 /*metrics*/
-			ratio =  (double)sum/(double)global_sum;
-			/*printf("sum = %d  ratio = %f\n", sum, ratio);			*/
+			/*printf("sum = %d\n", sum);			*/
 
 			last_sum = sum;
 			if(sum<=0){
@@ -161,31 +146,8 @@ int main(int argc, char *argv[]){
 			last_x2 = x2;
 			last_y1 = y1;
 			last_y2 = y2;	
-			
-			if (ratio<ratio_limit){
-				break;
-			}
-
 		}
 	}
-
-	/*if (sum!=0){*/
-		/*printf("final step\n");*/
-		/*cudaMemcpy(data, data_d, sizeof(int)*m*n, cudaMemcpyDeviceToHost);*/
-		/*for (int j=0;j<n;j++){*/
-			/*for (int i=0;i<m;i++){*/
-				/*if(data[i*n + j]==1){*/
-					/*rec.x1 = j;*/
-					/*rec.x2 = j;*/
-					/*rec.y1 = i;*/
-					/*rec.y2 = i;*/
-					/*recs.push_back(rec);*/
-				/*}*/
-			/*}*/
-		/*}*/
-	/*}*/
-
-
 
 	cudaEventRecord(stop);
 	cudaEventSynchronize(stop);
@@ -198,22 +160,17 @@ int main(int argc, char *argv[]){
 	
 	// Saving data in csv format
 	std::ofstream r_file;
-	/*std::string file_name = "./results/";*/
-	/*file_name += std::to_string(grid_x*grid_y);*/
-	/*file_name += ".csv";*/
-	std::string file_name = argv[3];
+	std::string file_name = argv[2];
 	r_file.open(file_name);
 
 	std::cout << "saving rectagles -  vector size "<< recs.size() << std::endl;
 	std::vector<rectangle_t>::iterator v = recs.begin();
 	while(v !=recs.end()){
-		/*std::cout <<"  "<< v->x1 <<"  "<< v->x2 <<"  "<< v->y1 <<"  "<< v->y2 << std::endl;*/
 		r_file << v->x1 <<",  "<< v->x2 <<",  "<< v->y1 <<",  "<< v->y2 << "\n";
 		v++;
 	}
 	r_file.close();
 
-	// free data
 	delete areas;
 	delete out;
 

@@ -1,7 +1,7 @@
 
 #include <math.h>
 // getters
-#include "./getters_improved.h"
+#include "./getters.h"
 // random
 #include "./random_generator.h"
 
