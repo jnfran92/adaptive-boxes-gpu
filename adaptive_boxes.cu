@@ -16,16 +16,34 @@
 // rectangle struct
 #include "./include/rectangle.h"
 // csv
-#include "./include/csv_tools.h"
+#include "./include/io_tools.h"
 // data
-#include "./data/theatre12.h"
+/*#include "./data/squares.h"*/
 
 int main(int argc, char *argv[]){
 	printf("adaptive-boxes-gpu\n");
 	printf("GPU-accelerated rectangular decomposition for sound propagation modeling\n");
 
-	printf("----> Data size: m %ld , n% ld\n",m, n);
+	if (argc < 4){
+		printf("Error Args: 4 Needed \n[1]input file(binary matrix in .csv)\n[2]output file(list of rectangles in .csv) \n[3]n (# of tests = 4*n)\n");
+		return 0;
+	}
 
+	// Arguments
+	std::string input_file_name = argv[1];
+	std::string output_file_name = argv[2];
+	int n_tests = atoi(argv[3]);
+
+
+	// Reading data	
+	printf("Reading Data...\n");
+	binary_matrix_t data_t;
+	read_binary_data(input_file_name, &data_t);
+	
+	long m = data_t.m;
+	long n = data_t.n;
+	printf("Data on Memory: Data size: m %ld , n% ld\n",m, n);
+	
 	// CUDA timers
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
@@ -36,8 +54,8 @@ int main(int argc, char *argv[]){
 
 	// CUDA
 	int grid_x = 4; // fixed
-	int grid_y = atoi(argv[1]); //
-	printf("----> Number of tests: %d \n",grid_x*grid_y);
+	int grid_y = n_tests; //
+	printf("Number of tests: %d \n",grid_x*grid_y);
 	
 	// GPU data
 	int *data_d;
@@ -55,7 +73,7 @@ int main(int argc, char *argv[]){
 	out_d = thrust::raw_pointer_cast(&t_out_d[0]);	
 	
 	// Copy data to device memory
-	cudaMemcpy(data_d, data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
+	cudaMemcpy(data_d, data_t.data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
 	
 	// Grid and Block size
 	dim3 grid(grid_x, grid_y, 1);
@@ -63,8 +81,7 @@ int main(int argc, char *argv[]){
 	
 	// Init algorithm -----------------------
 	cudaEventRecord(start);
-	// Setup
-	// curand
+	// Setup cuRand
 	curandState *devStates;
 	CC(cudaMalloc((void **)&devStates, grid_x*grid_y*sizeof(unsigned int)));
 	
@@ -106,8 +123,6 @@ int main(int argc, char *argv[]){
 
 
 		if (!((last_x1==x1) & (last_x2==x2) & (last_y1==y1) & (last_y2==y2)) ){
-		
-			
 			int dist_y = (y2 - y1) + 1;
 			int dist_x = (x2 - x1) + 1;
 			int x_blocks = (int)ceil((double)dist_x/2.0);
@@ -129,13 +144,13 @@ int main(int argc, char *argv[]){
 				recs.push_back(rec);
 			}
 			
-			 /*metrics*/
 			/*printf("sum = %d\n", sum);			*/
 
 			last_sum = sum;
 			if(sum<=0){
 				break;
 			}
+			
 			last_x1 = x1;
 			last_x2 = x2;
 			last_y1 = y1;
@@ -153,11 +168,12 @@ int main(int argc, char *argv[]){
 	
 	
 	/*Saving data in csv format*/
-	std::cout << "Saving rectagles -  vector size "<< recs.size() << std::endl;
-	save_rectangles_in_csv(argv[2], &recs);	
+	std::cout << "Saving rectagles -  total amount of rectangles: "<< recs.size() << std::endl;
+	save_rectangles_in_csv(output_file_name, &recs);	
 	
 	// Free memory
 	cudaFree(devStates);
+	/*delete data;*/
 
 	return 0;
 }
