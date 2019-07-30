@@ -17,8 +17,6 @@
 #include "./include/rectangle.h"
 // csv
 #include "./include/io_tools.h"
-// data
-/*#include "./data/squares.h"*/
 
 int main(int argc, char *argv[]){
 	printf("adaptive-boxes-gpu\n");
