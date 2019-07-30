@@ -4,42 +4,48 @@
 
 // ng: New Getters Optimized
 namespace ng{
-	// results matrix: [x1 x2 y1 y2]
-	__device__ __host__ void get_right_bottom_rectangle(int idx_i_arg, int idx_j_arg, long m_arg, long n_arg, int *data_matrix_arg, int *results){
-
-
+	
+	__device__ __host__ int get_bottom_distance(int idx_i_arg, int idx_j_arg, int n_arg, int lim, int *data_matrix_arg){
+		int di =0;
 		int temp_val = 0;
-		
-		int x1_val = 0;
-		int x2_val = 0;
-		int y1_val = 0;
-		int y2_val = 0;
-
-
-		int d0, di, dj;
-		
-		// Get the max distance in the axis
-		di =0;
-		for (int i=idx_i_arg; i<m_arg; i++){
+		for (int i=idx_i_arg; i<lim; i++){
 			temp_val = data_matrix_arg[i * n_arg + idx_j_arg];
 			if(temp_val == 0){
 				break;
 			}
 			di++;	
 		}
-		d0 = di;
+		return di;
+	}
+
+	__device__ __host__ int get_top_distance(int idx_i_arg, int idx_j_arg, int n_arg, int lim, int *data_matrix_arg){
+		int di = 0;
+		int temp_val = 0;
+		for (int i=idx_i_arg; i>lim; i--){
+			temp_val = data_matrix_arg[i * n_arg + idx_j_arg];
+			if(temp_val == 0){
+				break;
+			}	
+			di++;
+		}
+		return di;
+	}
+	
+	// results matrix: [x1 x2 y1 y2]
+	__device__ __host__ void get_right_bottom_rectangle(int idx_i_arg, int idx_j_arg, long m_arg, long n_arg, int *data_matrix_arg, int *results){
+
+		int x1_val = 0;
+		int x2_val = 0;
+		int y1_val = 0;
+		int y2_val = 0;
+
+		int d0, dj;
+		
+		d0 = get_bottom_distance( idx_i_arg, idx_j_arg, n_arg,  m_arg, data_matrix_arg);
 
 		dj = 0;
 		for (int j=idx_j_arg + 1; j<n_arg; j++){
-			di =0;
-			for (int i=idx_i_arg; i<(idx_i_arg + d0); i++){
-				temp_val = data_matrix_arg[i * n_arg + j];
-				if(temp_val == 0){
-					break;
-				}
-				di++;	
-			}
-
+			int di = get_bottom_distance(idx_i_arg, j, n_arg, idx_i_arg + d0, data_matrix_arg);
 			if (di < d0){
 				break;
 			}
@@ -59,10 +65,9 @@ namespace ng{
 	}
 
 
+
 	__device__ __host__ void get_left_bottom_rectangle(int idx_i_arg, int idx_j_arg, long m_arg, long n_arg, int *data_matrix_arg, int *results){
 
-
-		int temp_val = 0;
 		
 		int x1_val = 0;
 		int x2_val = 0;
@@ -70,29 +75,13 @@ namespace ng{
 		int y2_val = 0;
 
 
-		int d0,dj,di;
+		int d0,dj;
 		
-		// Get the max distance in the axis
-		di=0;
-		for (int i=idx_i_arg; i<m_arg; i++){
-			temp_val = data_matrix_arg[i * n_arg + idx_j_arg];
-			if(temp_val == 0){
-				break;
-			}	
-			di++;	
-		}
-		d0 = di;
-
+		d0 = get_bottom_distance( idx_i_arg, idx_j_arg, n_arg, m_arg, data_matrix_arg);
 		dj = 0;
 		for (int j=idx_j_arg - 1; j>=0; j--){
-			di = 0;
-			for (int i=idx_i_arg; i< (idx_i_arg + d0); i++){
-				temp_val = data_matrix_arg[i * n_arg + j];
-				if(temp_val == 0){
-					break;
-				}
-				di++;	
-			}
+			
+			int di = get_bottom_distance( idx_i_arg, j, n_arg, idx_i_arg + d0, data_matrix_arg);
 
 			if (di < d0){
 				break;
@@ -113,10 +102,9 @@ namespace ng{
 	}
 
 
+	
 	__device__ __host__ void get_left_top_rectangle(int idx_i_arg, int idx_j_arg, long n_arg, int *data_matrix_arg, int *results){
 
-
-		int temp_val = 0;
 		
 		int x1_val = 0;
 		int x2_val = 0;
@@ -124,30 +112,13 @@ namespace ng{
 		int y2_val = 0;
 
 
-		int d0, di, dj;
+		int d0, dj;
 		
-		// Get the max distance in the axis
-		di = 0;
-		for (int i=idx_i_arg; i>-1; i--){
-			temp_val = data_matrix_arg[i * n_arg + idx_j_arg];
-			if(temp_val == 0){
-				break;
-			}	
-			di++;
-		}
-		d0 = di;
-
+		d0 = get_top_distance( idx_i_arg, idx_j_arg, n_arg, -1, data_matrix_arg);
 		dj = 0;
 		for (int j=idx_j_arg - 1; j>-1; j--){
-			di = 0;
-			for (int i=idx_i_arg; i>(idx_i_arg - d0); i--){
-				temp_val = data_matrix_arg[i * n_arg + j];
-				if(temp_val == 0){
-					break;
-				}	
-				di++;
-			}
-
+			
+			int di = get_top_distance( idx_i_arg, j, n_arg, idx_i_arg - d0, data_matrix_arg);
 			if (di < d0){
 				break;
 			}
@@ -169,7 +140,6 @@ namespace ng{
 
 	__device__ __host__ void get_right_top_rectangle(int idx_i_arg, int idx_j_arg, long n_arg, int *data_matrix_arg, int *results){
 
-		int temp_val = 0;
 		
 		int x1_val = 0;
 		int x2_val = 0;
@@ -177,30 +147,12 @@ namespace ng{
 		int y2_val = 0;
 
 
-		int d0, di, dj;
+		int d0, dj;
 		
-		// Get the max distance in the axis
-		di = 0;
-		for (int i=idx_i_arg; i>-1; i--){
-			temp_val = data_matrix_arg[i * n_arg + idx_j_arg];
-			if(temp_val == 0){
-				break;
-			}	
-			di++;
-		}
-		d0 = di;
-
+		d0 = get_top_distance( idx_i_arg, idx_j_arg, n_arg, -1, data_matrix_arg);
 		dj = 0;
 		for (int j=idx_j_arg + 1; j<n_arg; j++){
-			di = 0;	
-			for (int i=idx_i_arg; i>(idx_i_arg - d0); i--){
-				temp_val = data_matrix_arg[i * n_arg + j];
-				if(temp_val == 0){
-					break;
-				}
-				di++;	
-			}
-
+			int di = get_top_distance( idx_i_arg, j, n_arg, idx_i_arg - d0, data_matrix_arg);
 			if (di < d0){
 				break;
 			}

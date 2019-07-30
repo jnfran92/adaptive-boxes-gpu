@@ -6,9 +6,8 @@
 #include <string>
 // getters
 #include "../include/getters.h"
-#include "../include/getters_improved.h"
 // data
-#include "../data/hall10.h"
+#include "./hall10.h"
 
 
 bool verify_results(int *expected, int *actual, bool print);
