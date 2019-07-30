@@ -1,9 +1,6 @@
 
-#include <cuda.h>
-#include "stdlib.h"
+#include <stdlib.h>
 #include <iostream>
-#include <fstream>
-#include <string>
 // thrust
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -18,9 +15,10 @@
 #include "./include/rectangular_remover_kernel.h"
 // rectangle struct
 #include "./include/rectangle.h"
+// csv
+#include "./include/csv_tools.h"
 // data
 #include "./data/theatre12.h"
-
 
 int main(int argc, char *argv[]){
 	printf("adaptive-boxes-gpu\n");
@@ -56,10 +54,6 @@ int main(int argc, char *argv[]){
 	thrust::device_vector<int> t_out_d(grid_x*grid_y*4);
 	out_d = thrust::raw_pointer_cast(&t_out_d[0]);	
 	
-	// CPU mem
-	int *areas = new int[grid_x*grid_y];
-	int *out = new int[4*grid_x*grid_y];
-
 	// Copy data to device memory
 	cudaMemcpy(data_d, data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
 	
@@ -158,22 +152,11 @@ int main(int argc, char *argv[]){
 	printf("-->Last sum %d\n",sum);
 	
 	
-	// Saving data in csv format
-	std::ofstream r_file;
-	std::string file_name = argv[2];
-	r_file.open(file_name);
-
-	std::cout << "saving rectagles -  vector size "<< recs.size() << std::endl;
-	std::vector<rectangle_t>::iterator v = recs.begin();
-	while(v !=recs.end()){
-		r_file << v->x1 <<",  "<< v->x2 <<",  "<< v->y1 <<",  "<< v->y2 << "\n";
-		v++;
-	}
-	r_file.close();
-
-	delete areas;
-	delete out;
-
+	/*Saving data in csv format*/
+	std::cout << "Saving rectagles -  vector size "<< recs.size() << std::endl;
+	save_rectangles_in_csv(argv[2], &recs);	
+	
+	// Free memory
 	cudaFree(devStates);
 
 	return 0;
