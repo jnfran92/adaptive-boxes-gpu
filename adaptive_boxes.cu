@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
 	printf("GPU-accelerated rectangular decomposition for sound propagation modeling\n");
 
 	if (argc < 4){
-		printf("Error Args: 4 Needed \n[1]input file(binary matrix in .csv)\n[2]output file(list of rectangles in .csv) \n[3]n (# of tests = 4*n)\n");
+		printf("Error Args: 4 Needed \n[1]input file(binary matrix in .csv)\n[2]output file(list of rectangles in .csv) \n[3]n (# of tests = n*n)\n");
 		return 0;
 	}
 
