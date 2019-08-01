@@ -51,7 +51,7 @@ int main(int argc, char *argv[]){
 	std::vector<rectangle_t> recs;
 
 	// CUDA
-	int grid_x = 4; // fixed
+	int grid_x = n_tests; // fixed
 	int grid_y = n_tests; //
 	printf("Number of tests: %d \n",grid_x*grid_y);
 	
