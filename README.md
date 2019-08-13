@@ -1,8 +1,8 @@
 # adaptive-boxes-gpu
 
 A GPU-accelerated algorithm for searching an adequate rectangular decomposition of a 2D scene in a reasonable time.
-The decomposition algorithm works over a raster image of a scene, which is well represented as a binary matrix X.
-The algorithm decomposes the binary matrix into large rectangles using CUDA.
+The decomposition algorithm works over a raster image of a scene, which is well represented as a *binary matrix X*.
+The algorithm decomposes the *binary matrix X* into large rectangles using `CUDA`.
 
 ## Samples
 
@@ -10,25 +10,40 @@ The algorithm decomposes the binary matrix into large rectangles using CUDA.
 
 Model:
 
-<img src="https://imgur.com/2KAW9Ha.jpg" width="800">
+<img src="https://imgur.com/2KAW9Ha-.jpg" width="800">
 
 Model Decomposed:
 
-<img src="https://imgur.com/hABkX4i.jpg" width="800">
+<img src="https://imgur.com/hABkX4i-.jpg" width="800">
 
 ### Scene 2
 
 Model:
 
-<img src="https://imgur.com/dfbjjPf.jpg" width="800">
+<img src="https://imgur.com/dfbjjPf-.jpg" width="800">
 
 Model Decomposed:
 
-<img src="https://imgur.com/GHRFJyJ.jpg" width="800">
+<img src="https://imgur.com/GHRFJyJ-.jpg" width="800">
 
 
+### Scene 3
 
-## Guide
+Model:
+
+<img src="https://imgur.com/dfbjjPf-.jpg" width="800">
+
+Model Decomposed:
+
+<img src="https://imgur.com/GHRFJyJ-.jpg" width="800">
+
+
+## Usage Guide
+
+### Requirements
+- CUDA 9.0
+- Thrust parallel template library
+- CuRand
 
 ### Basics
 First compile the `adaptive_boxes.cu` script. Just do `make`.
@@ -43,4 +58,18 @@ The input should be a `.csv` file which contains the matrix size and the binary 
 Some samples are located in `data` folder. As a simple example see `squares.csv`.
 
 ### Output file
-A list of resulting rectangles. Data is given in the format: `[x1 x2 y1 y2]` (Two points rectangle location).
+A list of resulting rectangles in a `.csv` file. 
+Data is given in the format: `[x1 x2 y1 y2]` (Two points rectangle location).
+
+## Performance Test
+
+Execution time in seconds:
+
+
+| # of parallel searches |    Scene 1    |   Scene 2    |   Scene 3    |
+|------------------------|--------|--------|--------|
+| 2400 |  3.1 |  2.6 |  2 | 
+
+Tests performed using a NVIDIA Tesla V100.
+
+
