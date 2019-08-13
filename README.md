@@ -10,32 +10,32 @@ The algorithm decomposes the *binary matrix X* into large rectangles using `CUDA
 
 Model:
 
-<img src="https://imgur.com/2KAW9Ha-.jpg" width="800">
+<img src="https://imgur.com/2KAW9Ha.jpg" width="800">
 
 Model Decomposed:
 
-<img src="https://imgur.com/hABkX4i-.jpg" width="800">
+<img src="https://imgur.com/hABkX4i.jpg" width="800">
 
 ### Scene 2
 
 Model:
 
-<img src="https://imgur.com/dfbjjPf-.jpg" width="800">
+<img src="https://imgur.com/LJmxu24.jpg" width="800">
 
 Model Decomposed:
 
-<img src="https://imgur.com/GHRFJyJ-.jpg" width="800">
+<img src="https://imgur.com/2IsC04x.jpg" width="800">
 
 
 ### Scene 3
 
 Model:
 
-<img src="https://imgur.com/dfbjjPf-.jpg" width="800">
+<img src="https://imgur.com/dfbjjPf.jpg" width="800">
 
 Model Decomposed:
 
-<img src="https://imgur.com/GHRFJyJ-.jpg" width="800">
+<img src="https://imgur.com/GHRFJyJ.jpg" width="800">
 
 
 ## Usage Guide
@@ -66,10 +66,10 @@ Data is given in the format: `[x1 x2 y1 y2]` (Two points rectangle location).
 Execution time in seconds:
 
 
-| # of parallel searches |    Scene 1    |   Scene 2    |   Scene 3    |
+| # of parallel searches *[n]* |    Scene 1    |   Scene 2    |   Scene 3    |
 |------------------------|--------|--------|--------|
 | 2400 |  3.1 |  2.6 |  2 | 
 
-Tests performed using a NVIDIA Tesla V100.
+Tests were performed using a GPU NVIDIA Tesla V100.
 
 
