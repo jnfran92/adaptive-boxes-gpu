@@ -66,7 +66,7 @@ Data is given in the format: `[x1 x2 y1 y2]` (Two points rectangle location).
 Execution time in seconds:
 
 
-| # of parallel searches `[n] |    Scene 1    |   Scene 2    |   Scene 3    |
+| # of parallel searches `[n]` |    Scene 1    |   Scene 2    |   Scene 3    |
 |------------------------|--------|--------|--------|
 | 2400 |  3.1 |  2.6 |  2 | 
 
@@ -75,7 +75,10 @@ Tests were performed using a GPU NVIDIA Tesla V100.
 ## Extra info
 
 ### How does it work?
-See the paper: `[link]`.
+See the paper: `[adaptive-boxes paper link]`.
 
 ### How to plot the `.csv` results?
-Use `adaptive-boxes` python library, see here `[link]`.
+Use `adaptive-boxes` python library, see here `[ python implementation link]`.
+
+### Why sound propagation modeling?
+See here: `[ python ard link link]`.
