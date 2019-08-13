@@ -6,6 +6,8 @@ The algorithm decomposes the *binary matrix X* into large rectangles using `CUDA
 
 ## Samples
 
+High resolution images! Click over any image to see the rectangular decomposition's details.
+
 ### Scene 1
 
 Model:
