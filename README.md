@@ -10,32 +10,32 @@ High resolution images! Click over any image to see the rectangular decompositio
 
 ### Scene 1
 
-Model:
+
 
 <img src="https://imgur.com/2KAW9Ha.jpg" width="800">
 
-Model Decomposed:
+
 
 <img src="https://imgur.com/hABkX4i.jpg" width="800">
 
 ### Scene 2
 
-Model:
+
 
 <img src="https://imgur.com/LJmxu24.jpg" width="800">
 
-Model Decomposed:
+
 
 <img src="https://imgur.com/2IsC04x.jpg" width="800">
 
 
 ### Scene 3
 
-Model:
+
 
 <img src="https://imgur.com/dfbjjPf.jpg" width="800">
 
-Model Decomposed:
+
 
 <img src="https://imgur.com/GHRFJyJ.jpg" width="800">
 
