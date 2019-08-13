@@ -10,21 +10,21 @@ The algorithm decomposes the binary matrix into large rectangles using CUDA.
 
 Model:
 
-<img src="https://imgur.com/2KAW9Ha-.jpg" width="800">
+<img src="https://imgur.com/2KAW9Ha.jpg" width="800">
 
 Model Decomposed:
 
-<img src="https://imgur.com/hABkX4i-.jpg" width="800">
+<img src="https://imgur.com/hABkX4i.jpg" width="800">
 
 ### Scene 2
 
 Model:
 
-<img src="https://imgur.com/dfbjjPf-.jpg" width="800">
+<img src="https://imgur.com/dfbjjPf.jpg" width="800">
 
 Model Decomposed:
 
-<img src="https://imgur.com/GHRFJyJ-.jpg" width="800">
+<img src="https://imgur.com/GHRFJyJ.jpg" width="800">
 
 
 
