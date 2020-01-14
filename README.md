@@ -1,7 +1,11 @@
 # adaptive-boxes-gpu
 
 A GPU-accelerated algorithm for searching an adequate rectangular decomposition of a 2D scene in a reasonable time.
+
+
 The decomposition algorithm works over a raster image of a scene, which is well represented as a *binary matrix X*.
+
+
 The algorithm decomposes the *binary matrix X* into large rectangles using `CUDA`.
 
 ## Samples
