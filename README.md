@@ -1,5 +1,7 @@
 # adaptive-boxes-gpu
 
+[![Article](https://img.shields.io/badge/ieee-article-blue.svg)](https://ieeexplore.ieee.org/document/8966434) 
+
 A GPU-accelerated algorithm for searching an adequate rectangular decomposition of a 2D scene in a reasonable time.
 
 
