@@ -81,7 +81,7 @@ Tests were performed using a GPU NVIDIA Tesla V100.
 ## Extra info
 
 ### How does it work?
-See the paper: `[adaptive-boxes paper link]`.
+See the paper (GPU-accelerated rectangular decomposition for sound propagation modeling in 2D)[https://ieeexplore.ieee.org/document/8966434].
 
 ### How to plot the `.csv` results?
 Use `adaptive-boxes` python library, see here `[ python implementation link]`.
