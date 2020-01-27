@@ -1,14 +1,10 @@
 # adaptive-boxes-gpu
 
-[![Article](https://img.shields.io/badge/ieee-article-blue.svg)](https://ieeexplore.ieee.org/document/8966434) 
+[![Article](https://img.shields.io/badge/ieee-article-blue.svg)](https://ieeexplore.ieee.org/document/8966434)
 
-A GPU-accelerated algorithm for searching an adequate rectangular decomposition of a 2D scene in a reasonable time.
+GPU-accelerated rectangular decomposition for sound propagation modeling in 2D.
 
-
-The decomposition algorithm works over a raster image of a scene, which is well represented as a *binary matrix X*.
-
-
-The algorithm decomposes the *binary matrix X* into large rectangles using `CUDA`.
+<img src="./hires_images/intro_image.png" alt="sample1">
 
 ## Samples
 
@@ -83,7 +79,10 @@ Tests were performed using a GPU NVIDIA Tesla V100.
 ## Extra info
 
 ### How does it work? Why sound propagation modeling?
-See the paper [GPU-accelerated rectangular decomposition for sound propagation modeling in 2D](https://ieeexplore.ieee.org/document/8966434).
+
+Adaptive Rectangular Decomposition (ARD) is an efficient technique for modeling the sound propagation. This technique reduces the computational overhead and memory requirements by using non-dispersive sub-rectangular domains suitable for parallel computation. In order to use this technique, the scene should be decomposed into large inscribed rectangles. For large and complex scenes, it is not feasible to find an optimal set of large rectangles and thus an approximation should be used. In this paper, we present a GPU-accelerated algorithm for searching an adequate rectangular decomposition of a 2D scene in a reasonable time. Our algorithm performs a fast parallel search in the entire domain. As a result, large and complex scenes can be decomposed in seconds and it enables them to be numerically modeled in parallel using ARD.
+
+More info: [GPU-accelerated rectangular decomposition for sound propagation modeling in 2D](https://ieeexplore.ieee.org/document/8966434).
 
 ### How to plot the `.csv` results?
 Use `adaptive-boxes` python library:
