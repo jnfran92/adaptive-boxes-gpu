@@ -1,14 +1,14 @@
-# adaptive-boxes-gpu
+# adaptive-boxes-gpu :zap: :package: 
 
-[![Article](https://img.shields.io/badge/ieee-article-blue.svg)](https://ieeexplore.ieee.org/document/8966434)
+<img src="https://i.imgur.com/YokPxyw.png" width="400">
 
-GPU-accelerated rectangular decomposition for sound propagation modeling in 2D.
+GPU-accelerated rectangular decomposition for sound propagation modeling in 2D. [![Article](https://img.shields.io/badge/ieee-article-blue.svg)](https://ieeexplore.ieee.org/document/8966434)
 
-<img src="./hires_images/intro_image.png" alt="sample1">
 
 ## Samples
 
 High resolution images! Click over any image to see the rectangular decomposition's details.
+
 
 ### Scene 1
 
