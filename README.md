@@ -90,4 +90,4 @@ Use `adaptive-boxes` python library:
   
     pip install adaptive-boxes
   
-see here [adabox](https://github.com/jnfran92/adaptive-boxes).
+See here [adabox](https://github.com/jnfran92/adaptive-boxes).
