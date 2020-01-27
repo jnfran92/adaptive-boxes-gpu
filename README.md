@@ -82,11 +82,12 @@ Tests were performed using a GPU NVIDIA Tesla V100.
 
 ## Extra info
 
-### How does it work?
+### How does it work? Why sound propagation modeling?
 See the paper [GPU-accelerated rectangular decomposition for sound propagation modeling in 2D](https://ieeexplore.ieee.org/document/8966434).
 
 ### How to plot the `.csv` results?
-Use `adaptive-boxes` python library, see here `[ python implementation link]`.
-
-### Why sound propagation modeling?
-See here: `[ python ard link link]`.
+Use `adaptive-boxes` python library:
+  
+    pip install adaptive-boxes
+  
+see here [adabox](https://github.com/jnfran92/adaptive-boxes).
