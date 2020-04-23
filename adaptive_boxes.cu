@@ -18,7 +18,7 @@
 // csv
 #include "./include/io_tools.h"
 
-//#include "./include/csv_tools.h"
+#include "./include/csv_tools.h"
 
 int main(int argc, char *argv[]){
 	printf("adaptive-boxes-gpu\n");
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
 
 	// Reading data
 
-	printf("Reading data with new function csv_tools.h\n")
+	printf("Reading data with new function csv_tools.h\n");
     std::cout << "reading: " << input_file_name << std::endl;
 
     csv_data_t csv_data;
