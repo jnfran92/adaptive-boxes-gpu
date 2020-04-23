@@ -80,7 +80,7 @@ void read_numerical_csv(const std::string &file_name, bool has_header, csv_data_
             throw 0;    // CSV Data are not homogeneous, size of each row is different.
         }
         for(const std::string &data : vec){
-            csv_data.data_vec.push_back(atoi( data ));
+            csv_data.data_vec.push_back(std::stoi( data ));
         }
         counter++;
     }
