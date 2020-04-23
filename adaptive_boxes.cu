@@ -17,6 +17,7 @@
 #include "./include/rectangle.h"
 // csv
 #include "./include/csv_tools.h"
+#include "./include/io_tools.h"
 
 
 int main(int argc, char *argv[]){
