@@ -18,6 +18,8 @@
 // csv
 #include "./include/io_tools.h"
 
+#include "include/csv_tools.h"
+
 int main(int argc, char *argv[]){
 	printf("adaptive-boxes-gpu\n");
 	printf("GPU-accelerated rectangular decomposition for sound propagation modeling\n");
@@ -33,7 +35,16 @@ int main(int argc, char *argv[]){
 	int n_tests = atoi(argv[3]);
 
 
-	// Reading data	
+	// Reading data
+
+	printf("Reading data with new function csv_tools.h\n")
+    std::cout << "reading: " << input_file_name << std::endl;
+
+    csv_data_t csv_data;
+    read_numerical_csv(input_file_name, false, csv_data);
+    csv_data.print_data();
+
+
 	printf("Reading Data...\n");
 	binary_matrix_t data_t;
 	read_binary_data(input_file_name, &data_t);
