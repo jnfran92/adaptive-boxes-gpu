@@ -19,7 +19,7 @@
 #include "./include/io_tools.h"
 
 // csv 2
-//#include "./include/csv_tools.h"
+#include "./include/csv_tools.h"
 
 
 int main(int argc, char *argv[]){
@@ -37,14 +37,14 @@ int main(int argc, char *argv[]){
 	int n_tests = atoi(argv[3]);
 
 
-	// Reading data
+//	 Reading data
 
-//	printf("Reading data with new function csv_tools.h\n");
-//    std::cout << "reading: " << input_file_name << std::endl;
-//
-//    csv_data_t csv_data;
-//    read_numerical_csv(input_file_name, false, csv_data);
-//    csv_data.print_data();
+	printf("Reading data with new function csv_tools.h\n");
+    std::cout << "reading: " << input_file_name << std::endl;
+
+    csv_data_t csv_data;
+    read_numerical_csv(input_file_name, false, csv_data);
+    csv_data.print_data();
 
 
 	printf("Reading Data...\n");

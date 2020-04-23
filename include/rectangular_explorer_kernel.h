@@ -1,4 +1,4 @@
-v
+
 #include <math.h>
 // getters
 #include "./getters.h"
