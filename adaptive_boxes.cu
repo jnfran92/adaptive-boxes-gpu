@@ -8,6 +8,7 @@
 #include <thrust/copy.h>
 //STL
 #include <vector>
+#include "./include/csv_tools.h"
 // cuda call
 #include "./include/cuda_call.h"
 // kernels
@@ -17,8 +18,6 @@
 #include "./include/rectangle.h"
 // csv
 #include "./include/io_tools.h"
-
-#include "./include/csv_tools.h"
 
 int main(int argc, char *argv[]){
 	printf("adaptive-boxes-gpu\n");
