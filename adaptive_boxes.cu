@@ -16,9 +16,6 @@
 // rectangle struct
 #include "./include/rectangle.h"
 // csv
-#include "./include/io_tools.h"
-
-// csv 2
 #include "./include/csv_tools.h"
 
 
@@ -48,11 +45,14 @@ int main(int argc, char *argv[]){
 
 
 	printf("Reading Data...\n");
-	binary_matrix_t data_t;
-	read_binary_data(input_file_name, &data_t);
-	
-	long m = data_t.m;
-	long n = data_t.n;
+//	binary_matrix_t data_t;
+//	read_binary_data(input_file_name, &data_t);
+
+
+
+	long m = csv_data.m;
+	long n = csv_data.n;
+    int *data = &csv_data.data_vec[0];
 	printf("Data on Memory: Data size: m %ld , n% ld\n",m, n);
 	
 	// CUDA timers
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]){
 	out_d = thrust::raw_pointer_cast(&t_out_d[0]);	
 	
 	// Copy data to device memory
-	cudaMemcpy(data_d, data_t.data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
+	cudaMemcpy(data_d, data, sizeof(int)*m*n, cudaMemcpyHostToDevice);
 	
 	// Grid and Block size
 	dim3 grid(grid_x, grid_y, 1);
