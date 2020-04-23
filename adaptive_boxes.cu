@@ -36,20 +36,12 @@ int main(int argc, char *argv[]){
 
 
 //	 Reading data
-
-	printf("Reading data with new function csv_tools.h\n");
+    printf("Reading Data...\n");
     std::cout << "reading: " << input_file_name << std::endl;
 
     csv_data_t csv_data;
     read_numerical_csv(input_file_name, false, csv_data);
-    csv_data.print_data();
-
-
-	printf("Reading Data...\n");
-//	binary_matrix_t data_t;
-//	read_binary_data(input_file_name, &data_t);
-
-
+//    csv_data.print_data();
 
 	long m = csv_data.m;
 	long n = csv_data.n;
