@@ -17,7 +17,7 @@
 
 // Reading data in csv
 struct csv_data_t{
-    std::vector<int> data_vec;
+    std::vector<double> data_vec;
     std::string header;
     long m{};
     long n{};
