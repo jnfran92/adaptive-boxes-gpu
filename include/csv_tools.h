@@ -17,7 +17,7 @@
 
 // Reading data in csv
 struct csv_data_t{
-    std::vector<double> data_vec;
+    std::vector<int> data_vec;
     std::string header;
     long m{};
     long n{};
@@ -80,7 +80,7 @@ void read_numerical_csv(const std::string &file_name, bool has_header, csv_data_
             throw 0;    // CSV Data are not homogeneous, size of each row is different.
         }
         for(const std::string &data : vec){
-            csv_data.data_vec.push_back(std::stoi( data ));
+            csv_data.data_vec.push_back(std::atoi( data ));
         }
         counter++;
     }
